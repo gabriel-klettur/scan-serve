@@ -1,0 +1,166 @@
+import { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, Image, X, AlertCircle } from 'lucide-react';
+import { useOCRStore } from '@/store/ocrStore';
+import { validateImageFile, fileToDataUrl } from '@/utils/image';
+import { getMockOCRResponse } from '@/services/api';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+export const ImageUploader = () => {
+  const { status, originalImage, setStatus, setOriginalImage, setResult, setError, reset } = useOCRStore();
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const processImage = useCallback(async (file: File) => {
+    try {
+      setStatus('uploading');
+      setValidationError(null);
+      
+      const dataUrl = await fileToDataUrl(file);
+      setOriginalImage(dataUrl);
+      
+      setStatus('processing');
+      
+      // Simulate API call with mock data (demo mode)
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      const mockResult = getMockOCRResponse(dataUrl);
+      setResult(mockResult);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during processing');
+    }
+  }, [setStatus, setOriginalImage, setResult, setError]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setValidationError(validation.error || 'Invalid file');
+      return;
+    }
+
+    processImage(file);
+  }, [processImage]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+    },
+    maxFiles: 1,
+    disabled: status === 'uploading' || status === 'processing',
+  });
+
+  const handleReset = () => {
+    reset();
+    setValidationError(null);
+  };
+
+  if (status === 'success' && originalImage) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative rounded-xl overflow-hidden border border-border bg-card"
+      >
+        <img
+          src={originalImage}
+          alt="Uploaded receipt"
+          className="w-full h-auto max-h-[300px] object-contain"
+        />
+        <Button
+          variant="icon"
+          size="icon"
+          className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm"
+          onClick={handleReset}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+        <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-success/20 border border-success/30 backdrop-blur-sm">
+          <span className="text-xs font-medium text-success">Processed</span>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div
+        {...getRootProps()}
+        className={cn(
+          "relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer group",
+          "min-h-[280px] flex flex-col items-center justify-center p-8",
+          isDragActive
+            ? "border-primary bg-primary/5 shadow-glow"
+            : "border-border hover:border-primary/50 hover:bg-secondary/30",
+          (status === 'uploading' || status === 'processing') && "pointer-events-none opacity-60"
+        )}
+      >
+        <input {...getInputProps()} />
+        
+        <AnimatePresence mode="wait">
+          {isDragActive ? (
+            <motion.div
+              key="drag"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+                className="w-16 h-16 mx-auto mb-4 rounded-2xl gradient-primary flex items-center justify-center shadow-glow"
+              >
+                <Image className="w-8 h-8 text-primary-foreground" />
+              </motion.div>
+              <p className="text-lg font-medium text-primary">Drop your image here</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <p className="text-base font-medium text-foreground mb-2">
+                Drag & drop your receipt
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                or click to browse files
+              </p>
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <span className="px-2 py-1 rounded bg-secondary">JPG</span>
+                <span className="px-2 py-1 rounded bg-secondary">PNG</span>
+                <span className="text-muted-foreground/60">Max 10MB</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Validation Error */}
+      <AnimatePresence>
+        {validationError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20"
+          >
+            <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+            <span className="text-sm text-destructive">{validationError}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
