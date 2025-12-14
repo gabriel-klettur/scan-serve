@@ -1,16 +1,21 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState, type ChangeEventHandler } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Image, X, AlertCircle } from 'lucide-react';
+import { Upload, Image, X, AlertCircle, Camera } from 'lucide-react';
 import { useOCRStore } from '@/store/ocrStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
 import { getMockOCRResponse } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { createReceipt } from '@/features/receipts/db/receiptsRepo';
+import { CameraCapture } from '@/features/receipts/components/CameraCapture';
 
 export const ImageUploader = () => {
   const { status, originalImage, setStatus, setOriginalImage, setResult, setError, reset } = useOCRStore();
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const captureInputRef = useRef<HTMLInputElement | null>(null);
 
   const processImage = useCallback(async (file: File) => {
     try {
@@ -26,6 +31,24 @@ export const ImageUploader = () => {
       await new Promise(resolve => setTimeout(resolve, 2500));
       const mockResult = getMockOCRResponse(dataUrl);
       setResult(mockResult);
+
+      try {
+        await createReceipt({
+          folderId: null,
+          file,
+          ocr: mockResult,
+        });
+        toast({
+          title: 'Saved to Receipts',
+          description: 'Stored locally in IndexedDB.',
+        });
+      } catch (dbErr) {
+        toast({
+          title: 'Could not save to Receipts',
+          description: dbErr instanceof Error ? dbErr.message : 'IndexedDB error',
+          variant: 'destructive',
+        });
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
@@ -58,6 +81,22 @@ export const ImageUploader = () => {
   const handleReset = () => {
     reset();
     setValidationError(null);
+    setShowCamera(false);
+  };
+
+  const handleCaptureInput: ChangeEventHandler<HTMLInputElement> = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setValidationError(validation.error || 'Invalid file');
+      return;
+    }
+
+    setValidationError(null);
+    processImage(file);
+    e.target.value = '';
   };
 
   if (status === 'success' && originalImage) {
@@ -146,6 +185,44 @@ export const ImageUploader = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <div className="flex justify-end">
+        <input
+          ref={captureInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleCaptureInput}
+          disabled={status === 'uploading' || status === 'processing'}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => captureInputRef.current?.click()}
+          disabled={status === 'uploading' || status === 'processing'}
+        >
+          <Camera className="w-4 h-4" />
+          Take Photo
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowCamera((v) => !v)}
+          disabled={status === 'uploading' || status === 'processing'}
+          className="ml-2"
+        >
+          <Camera className="w-4 h-4" />
+          {showCamera ? 'Hide Camera' : 'Use Camera'}
+        </Button>
+      </div>
+
+      {showCamera && (
+        <CameraCapture
+          disabled={status === 'uploading' || status === 'processing'}
+          onCapture={(file) => processImage(file)}
+        />
+      )}
 
       {/* Validation Error */}
       <AnimatePresence>

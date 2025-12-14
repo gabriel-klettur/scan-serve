@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Scan, Github, Zap, Shield } from 'lucide-react';
+import { Scan, Github, Zap, Shield, FolderOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
 import { ImageUploader } from '@/components/uploader/ImageUploader';
 import { BeforeAfterViewer } from '@/components/viewer/BeforeAfterViewer';
@@ -9,6 +10,7 @@ import { ConfidenceMeter } from '@/components/results/ConfidenceMeter';
 import { ExportActions } from '@/components/results/ExportActions';
 import { Loader } from '@/components/ui/Loader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Home = () => {
   const { status, result } = useOCRStore();
@@ -46,6 +48,12 @@ const Home = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4"
           >
+            <Button asChild variant="outline" className="hidden sm:inline-flex">
+              <Link to="/receipts">
+                <FolderOpen className="w-4 h-4" />
+                Receipts
+              </Link>
+            </Button>
             <div className="hidden sm:flex items-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Zap className="w-4 h-4 text-warning" />
