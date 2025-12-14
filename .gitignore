@@ -31,3 +31,4 @@ venv/
 
 # Vercel
 **/.vercel/
+frontend/.env.example
