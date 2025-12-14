@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Scan, Github, Zap, Shield, FolderOpen } from 'lucide-react';
+import { Scan, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
 import { ImageUploader } from '@/components/uploader/ImageUploader';
@@ -54,16 +54,6 @@ const Home = () => {
                 Receipts
               </Link>
             </Button>
-            <div className="hidden sm:flex items-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-warning" />
-                Fast Processing
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-success" />
-                Secure
-              </span>
-            </div>
           </motion.div>
         </div>
       </header>
@@ -168,47 +158,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Features Grid - Only show when idle */}
-        {!hasResult && !isProcessing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-16 grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto"
-          >
-            {[
-              {
-                icon: Zap,
-                title: 'Instant Processing',
-                description: 'Get results in seconds with our optimized AI engine',
-              },
-              {
-                icon: Shield,
-                title: 'Secure & Private',
-                description: 'Your images are processed securely and never stored',
-              },
-              {
-                icon: Scan,
-                title: 'High Accuracy',
-                description: 'Advanced OCR with field extraction and confidence scores',
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="text-center p-6 rounded-xl bg-card/50 border border-border"
-              >
-                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <feature.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
       </main>
 
       {/* Footer */}
