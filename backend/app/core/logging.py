@@ -8,8 +8,6 @@ import logging.config
 import os
 import re
 import shutil
-from logging.handlers import RotatingFileHandler
-from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import Any
 
@@ -103,64 +101,82 @@ class SuppressReloadNoiseFilter(logging.Filter):
         return True
 
 
-class CurrentLogFileHandler(TimedRotatingFileHandler):
-    def __init__(
-        self,
-        logs_dir: str,
-        when: str = "midnight",
-        interval: int = 1,
-        utc: bool = False,
-    ) -> None:
+class SessionLogFileHandler(logging.FileHandler):
+    def __init__(self, logs_dir: str, utc: bool = False) -> None:
         self._logs_dir = Path(logs_dir)
-        self._archive_dir = self._logs_dir / "OLD_logs"
-        self._archive_dir.mkdir(parents=True, exist_ok=True)
+        self._archive_root = self._logs_dir / "OLD_logs"
+        self._archive_root.mkdir(parents=True, exist_ok=True)
+        self._utc = utc
 
-        base = self._logs_dir / "CURRENT_app.log"
+        self._current_path = self._logs_dir / "CURRENT_app.log"
+        self._last_path = self._logs_dir / "LAST_app.log"
 
-        # If the app was stopped during midnight rollover, archive the previous day's
-        # CURRENT_app.log on startup so each day stays separated.
-        if base.exists():
-            ts_now = _dt.datetime.utcnow() if utc else _dt.datetime.now()
-            ts_mtime = _dt.datetime.fromtimestamp(base.stat().st_mtime)
-            if ts_mtime.date() != ts_now.date() and base.stat().st_size > 0:
-                stamp = ts_mtime.strftime("%Y-%m-%d_%H-%M-%S")
-                target = self._archive_dir / f"{stamp}_app.log"
-                try:
-                    os.replace(str(base), str(target))
-                except OSError:
-                    shutil.move(str(base), str(target))
+        # If the previous session ended unexpectedly (or terminal was closed),
+        # archive the existing CURRENT_app.log before starting a new session.
+        self._archive_current(ts=self._now(), source_path=self._current_path)
 
-        super().__init__(
-            filename=str(base),
-            when=when,
-            interval=interval,
-            backupCount=0,
-            utc=utc,
-            encoding="utf-8",
-            delay=False,
-        )
+        super().__init__(filename=str(self._current_path), mode="w", encoding="utf-8", delay=False)
 
-    def doRollover(self) -> None:
-        if self.stream:
-            self.stream.close()
-            self.stream = None
+    def _now(self) -> _dt.datetime:
+        return _dt.datetime.utcnow() if self._utc else _dt.datetime.now()
 
-        current_path = Path(self.baseFilename)
-        if current_path.exists():
-            ts = _dt.datetime.utcnow() if self.utc else _dt.datetime.now()
-            stamp = ts.strftime("%Y-%m-%d_%H-%M-%S")
-            archived_name = f"{stamp}_app.log"
-            target = self._archive_dir / archived_name
+    def _archive_dir(self, ts: _dt.datetime) -> Path:
+        year = ts.strftime("%Y")
+        month = ts.strftime("%m")
+        target_dir = self._archive_root / year / month
+        target_dir.mkdir(parents=True, exist_ok=True)
+        return target_dir
 
-            target.parent.mkdir(parents=True, exist_ok=True)
+    def _unique_target(self, ts: _dt.datetime) -> Path:
+        base_dir = self._archive_dir(ts)
+        stamp = ts.strftime("%Y-%m-%d_%H-%M-%S")
+        pid = os.getpid()
+
+        candidate = base_dir / f"{stamp}_{pid}_app.log"
+        if not candidate.exists():
+            return candidate
+
+        i = 1
+        while True:
+            candidate = base_dir / f"{stamp}_{pid}_{i}_app.log"
+            if not candidate.exists():
+                return candidate
+            i += 1
+
+    def _archive_current(self, ts: _dt.datetime, source_path: Path) -> None:
+        if not source_path.exists() or source_path.stat().st_size == 0:
+            return
+
+        target = self._unique_target(ts)
+        try:
+            os.replace(str(source_path), str(target))
+        except OSError:
+            shutil.move(str(source_path), str(target))
+
+        self._update_last(archived_path=target)
+
+    def _update_last(self, archived_path: Path) -> None:
+        try:
+            self._last_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self._last_path.with_suffix(".tmp")
+            shutil.copy2(str(archived_path), str(tmp))
+            os.replace(str(tmp), str(self._last_path))
+        except Exception:
+            # If LAST_app.log cannot be updated (permissions/IO), do not break logging.
+            return
+
+    def close(self) -> None:
+        # Close the file and then archive it as a completed session log.
+        try:
+            super().close()
+        finally:
+            self._archive_current(ts=self._now(), source_path=self._current_path)
+            # Keep the CURRENT file present (empty) for tooling that expects it.
             try:
-                os.replace(str(current_path), str(target))
-            except OSError:
-                shutil.move(str(current_path), str(target))
-
-        self.mode = "a"
-        self.stream = self._open()
-        self.rolloverAt = self.computeRollover(int(self.rolloverAt))
+                self._current_path.parent.mkdir(parents=True, exist_ok=True)
+                self._current_path.write_text("", encoding="utf-8")
+            except Exception:
+                pass
 
 
 _configured = False
@@ -202,13 +218,11 @@ def build_logging_config(*, level: str, logs_dir: Path, json_logs: bool, color: 
                 "filters": ["request_id", "suppress_reload_noise"],
             },
             "file": {
-                "()": "app.core.logging.CurrentLogFileHandler",
+                "()": "app.core.logging.SessionLogFileHandler",
                 "level": level,
                 "formatter": "json" if json_logs else "plain",
                 "filters": ["request_id", "suppress_reload_noise"],
                 "logs_dir": str(logs_dir),
-                "when": "midnight",
-                "interval": 1,
                 "utc": False,
             },
         },
