@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Image, X, AlertCircle, Camera } from 'lucide-react';
 import { useOCRStore } from '@/store/ocrStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
-import { getMockOCRResponse } from '@/services/api';
+import { createReceiptOnServer } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -60,17 +60,15 @@ export const ImageUploader = () => {
       setOriginalImage(dataUrl);
       
       setStatus('processing');
-      
-      // Simulate API call with mock data (demo mode)
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      const mockResult = getMockOCRResponse(dataUrl);
-      setResult(mockResult);
+
+      const ocrResult = await createReceiptOnServer(file);
+      setResult(ocrResult);
 
       try {
         await createReceipt({
           folderId: null,
           file,
-          ocr: mockResult,
+          ocr: ocrResult,
         });
         toast({
           title: 'Saved to Receipts',

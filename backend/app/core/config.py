@@ -28,6 +28,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
         env_file=(Path(__file__).resolve().parents[2] / ".env"),
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
 

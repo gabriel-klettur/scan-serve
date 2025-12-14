@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useOCRStore } from '@/store/ocrStore';
@@ -10,6 +10,9 @@ export const BeforeAfterViewer = () => {
   const { result, showBoundingBoxes, toggleBoundingBoxes } = useOCRStore();
   const [activeView, setActiveView] = useState<'original' | 'processed'>('processed');
   const [zoom, setZoom] = useState(1);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [renderedSize, setRenderedSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   if (!result) return null;
 
@@ -18,6 +21,35 @@ export const BeforeAfterViewer = () => {
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
   const handleResetZoom = () => setZoom(1);
+
+  const scale = useMemo(() => {
+    if (naturalSize.width <= 0 || naturalSize.height <= 0) {
+      return { x: 1, y: 1 };
+    }
+    if (renderedSize.width <= 0 || renderedSize.height <= 0) {
+      return { x: 1, y: 1 };
+    }
+    return {
+      x: renderedSize.width / naturalSize.width,
+      y: renderedSize.height / naturalSize.height,
+    };
+  }, [naturalSize, renderedSize]);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+
+    const updateRendered = () => {
+      setRenderedSize({ width: img.clientWidth, height: img.clientHeight });
+    };
+
+    updateRendered();
+
+    const ro = new ResizeObserver(() => updateRendered());
+    ro.observe(img);
+
+    return () => ro.disconnect();
+  }, [imageUrl]);
 
   return (
     <div className="space-y-4">
@@ -86,14 +118,22 @@ export const BeforeAfterViewer = () => {
               transformOrigin: 'top center',
             }}
           >
-            <img
-              src={imageUrl}
-              alt={`${activeView} receipt`}
-              className="max-w-full h-auto rounded-lg"
-            />
-            {showBoundingBoxes && activeView === 'processed' && (
-              <BoundingBoxOverlay boxes={result.boxes} />
-            )}
+            <div className="relative inline-block">
+              <img
+                ref={imgRef}
+                src={imageUrl}
+                alt={`${activeView} receipt`}
+                className="max-w-full h-auto rounded-lg block"
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                  setRenderedSize({ width: img.clientWidth, height: img.clientHeight });
+                }}
+              />
+              {showBoundingBoxes && activeView === 'processed' && renderedSize.width > 0 && renderedSize.height > 0 && (
+                <BoundingBoxOverlay boxes={result.boxes} scaleX={scale.x} scaleY={scale.y} />
+              )}
+            </div>
           </div>
         </div>
       </motion.div>

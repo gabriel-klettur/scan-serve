@@ -3,6 +3,23 @@ import { OCRResponse } from '@/types/ocr';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+interface ServerReceipt {
+  id: string;
+  folderId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  originalFileName: string;
+  mimeType: string;
+  image_url: string;
+  ocr: OCRResponse | null;
+}
+
+const toAbsoluteUrl = (url: string): string => {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return new URL(url, API_BASE_URL).toString();
+};
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000, // 60 seconds for OCR processing
@@ -19,6 +36,29 @@ export const uploadImageForOCR = async (file: File): Promise<OCRResponse> => {
   });
 
   return response.data;
+};
+
+export const createReceiptOnServer = async (file: File): Promise<OCRResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('runOcr', 'true');
+
+  const response = await apiClient.post<ServerReceipt>('/api/v1/receipts', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  const receipt = response.data;
+  if (!receipt.ocr) {
+    throw new Error('OCR was not returned by the backend');
+  }
+
+  return {
+    ...receipt.ocr,
+    original_image_url: toAbsoluteUrl(receipt.ocr.original_image_url),
+    processed_image_url: toAbsoluteUrl(receipt.ocr.processed_image_url),
+  };
 };
 
 // Mock data for demo mode

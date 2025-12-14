@@ -182,6 +182,18 @@ class SessionLogFileHandler(logging.FileHandler):
 _configured = False
 
 
+def _normalize_level(level: str) -> str:
+    normalized = (level or "INFO").strip().upper()
+    aliases = {
+        "WARN": "WARNING",
+        "FATAL": "CRITICAL",
+    }
+    normalized = aliases.get(normalized, normalized)
+    if normalized not in logging._nameToLevel:  # type: ignore[attr-defined]
+        return "INFO"
+    return normalized
+
+
 def build_logging_config(*, level: str, logs_dir: Path, json_logs: bool, color: bool) -> dict[str, Any]:
     fmt = "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"
 
@@ -254,6 +266,8 @@ def init_logging(*, level: str, logs_dir: Path, json_logs: bool, color: bool) ->
     global _configured
     if _configured:
         return
+
+    level = _normalize_level(level)
 
     logs_dir.mkdir(parents=True, exist_ok=True)
     (logs_dir / "OLD_logs").mkdir(parents=True, exist_ok=True)
