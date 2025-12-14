@@ -17,6 +17,40 @@ export const ImageUploader = () => {
   const [showCamera, setShowCamera] = useState(false);
   const captureInputRef = useRef<HTMLInputElement | null>(null);
 
+  const isLikelyMobile = (() => {
+    // Heuristic (feature detection) to prefer native camera UX on touch devices.
+    // On desktop we prefer webcam preview (getUserMedia).
+    if (typeof window === 'undefined') return false;
+
+    const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+    const ua = navigator.userAgent || '';
+    const uaSuggestsMobile = /Android|iPhone|iPad|iPod|Mobi/i.test(ua);
+
+    return hasCoarsePointer || uaSuggestsMobile;
+  })();
+
+  const isProcessing = status === 'uploading' || status === 'processing';
+
+  const handleUseCamera = () => {
+    if (isProcessing) return;
+
+    // Mobile: use native camera/file picker via input capture.
+    if (isLikelyMobile) {
+      setShowCamera(false);
+      captureInputRef.current?.click();
+      return;
+    }
+
+    // Desktop: prefer webcam preview via getUserMedia when available.
+    if (navigator.mediaDevices?.getUserMedia) {
+      setShowCamera((v) => !v);
+      return;
+    }
+
+    // Fallback: open file picker.
+    captureInputRef.current?.click();
+  };
+
   const processImage = useCallback(async (file: File) => {
     try {
       setStatus('uploading');
@@ -194,32 +228,22 @@ export const ImageUploader = () => {
           capture="environment"
           className="hidden"
           onChange={handleCaptureInput}
-          disabled={status === 'uploading' || status === 'processing'}
+          disabled={isProcessing}
         />
         <Button
           type="button"
           variant="outline"
-          onClick={() => captureInputRef.current?.click()}
-          disabled={status === 'uploading' || status === 'processing'}
+          onClick={handleUseCamera}
+          disabled={isProcessing}
         >
           <Camera className="w-4 h-4" />
-          Take Photo
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowCamera((v) => !v)}
-          disabled={status === 'uploading' || status === 'processing'}
-          className="ml-2"
-        >
-          <Camera className="w-4 h-4" />
-          {showCamera ? 'Hide Camera' : 'Use Camera'}
+          {showCamera ? 'Close Camera' : 'Use Camera'}
         </Button>
       </div>
 
       {showCamera && (
         <CameraCapture
-          disabled={status === 'uploading' || status === 'processing'}
+          disabled={isProcessing}
           onCapture={(file) => processImage(file)}
         />
       )}
