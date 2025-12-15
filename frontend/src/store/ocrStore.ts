@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { OCRResponse, UploadStatus, BoundingBox, AiReceiptParseResponse } from '@/types/ocr';
+import { OCRResponse, UploadStatus, AiReceiptParseResponse } from '@/types/ocr';
 
 interface OCRStore {
   status: UploadStatus;
@@ -10,7 +10,8 @@ interface OCRStore {
   aiResult: AiReceiptParseResponse | null;
   aiError: string | null;
   showBoundingBoxes: boolean;
-  selectedBox: BoundingBox | null;
+  hoveredBoxIndex: number | null;
+  selectedBoxIndex: number | null;
   
   // Actions
   setStatus: (status: UploadStatus) => void;
@@ -22,7 +23,8 @@ interface OCRStore {
   setAiError: (error: string | null) => void;
   resetAi: () => void;
   toggleBoundingBoxes: () => void;
-  setSelectedBox: (box: BoundingBox | null) => void;
+  setHoveredBoxIndex: (index: number | null) => void;
+  setSelectedBoxIndex: (index: number | null) => void;
   reset: () => void;
 }
 
@@ -35,7 +37,8 @@ const initialState = {
   aiResult: null as AiReceiptParseResponse | null,
   aiError: null as string | null,
   showBoundingBoxes: true,
-  selectedBox: null,
+  hoveredBoxIndex: null,
+  selectedBoxIndex: null,
 };
 
 export const useOCRStore = create<OCRStore>((set) => ({
@@ -50,6 +53,8 @@ export const useOCRStore = create<OCRStore>((set) => ({
       aiStatus: 'idle',
       aiResult: null,
       aiError: null,
+      hoveredBoxIndex: null,
+      selectedBoxIndex: null,
     }),
   setError: (error) => set({ error, status: error ? 'error' : 'idle' }),
   setAiStatus: (aiStatus) => set({ aiStatus }),
@@ -57,6 +62,7 @@ export const useOCRStore = create<OCRStore>((set) => ({
   setAiError: (aiError) => set({ aiError, aiStatus: aiError ? 'error' : 'idle' }),
   resetAi: () => set({ aiStatus: 'idle', aiResult: null, aiError: null }),
   toggleBoundingBoxes: () => set((state) => ({ showBoundingBoxes: !state.showBoundingBoxes })),
-  setSelectedBox: (selectedBox) => set({ selectedBox }),
+  setHoveredBoxIndex: (hoveredBoxIndex) => set({ hoveredBoxIndex }),
+  setSelectedBoxIndex: (selectedBoxIndex) => set({ selectedBoxIndex }),
   reset: () => set(initialState),
 }));

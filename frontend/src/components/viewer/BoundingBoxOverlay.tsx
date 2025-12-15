@@ -21,7 +21,7 @@ const getRectFromBbox = (bbox: number[][]) => {
 };
 
 export const BoundingBoxOverlay = ({ boxes, scaleX, scaleY }: BoundingBoxOverlayProps) => {
-  const { selectedBox, setSelectedBox } = useOCRStore();
+  const { hoveredBoxIndex, selectedBoxIndex, setHoveredBoxIndex, setSelectedBoxIndex } = useOCRStore();
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -31,7 +31,9 @@ export const BoundingBoxOverlay = ({ boxes, scaleX, scaleY }: BoundingBoxOverlay
         const top = y1 * scaleY;
         const width = (x2 - x1) * scaleX;
         const height = (y2 - y1) * scaleY;
-        const isSelected = selectedBox?.text === box.text;
+        const isPinnedSelected = selectedBoxIndex === index;
+        const isHovered = hoveredBoxIndex === index;
+        const isActive = isPinnedSelected || (selectedBoxIndex === null && isHovered);
         const color = getConfidenceColor(box.confidence);
 
         return (
@@ -43,7 +45,7 @@ export const BoundingBoxOverlay = ({ boxes, scaleX, scaleY }: BoundingBoxOverlay
             className={cn(
               "absolute pointer-events-auto cursor-pointer transition-all duration-200",
               "border-2 rounded-sm",
-              isSelected && "ring-2 ring-offset-2 ring-offset-background"
+              isActive && "ring-2 ring-offset-2 ring-offset-background"
             )}
             style={{
               left,
@@ -51,16 +53,16 @@ export const BoundingBoxOverlay = ({ boxes, scaleX, scaleY }: BoundingBoxOverlay
               width,
               height,
               borderColor: color,
-              backgroundColor: isSelected ? `${color}20` : 'transparent',
+              backgroundColor: isPinnedSelected ? `${color}20` : 'transparent',
               // @ts-expect-error ring color handled via CSS
               '--tw-ring-color': color,
             }}
-            onClick={() => setSelectedBox(isSelected ? null : box)}
-            onMouseEnter={() => !isSelected && setSelectedBox(box)}
-            onMouseLeave={() => !isSelected && setSelectedBox(null)}
+            onClick={() => setSelectedBoxIndex(isPinnedSelected ? null : index)}
+            onMouseEnter={() => setHoveredBoxIndex(index)}
+            onMouseLeave={() => setHoveredBoxIndex(null)}
           >
             {/* Tooltip on hover */}
-            {(isSelected || selectedBox?.text === box.text) && (
+            {isActive && (
               <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import logging
 import json
 import re
+import time
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -44,6 +46,9 @@ class OpenAiReceiptParserService:
         if not self._client:
             raise RuntimeError("OpenAI API key is not configured")
 
+        log = logging.getLogger("app")
+        t0 = time.perf_counter()
+
         hint = {
             "merchant": getattr(fields_hint, "merchant", None) if fields_hint else None,
             "date": getattr(fields_hint, "date", None) if fields_hint else None,
@@ -81,6 +86,11 @@ class OpenAiReceiptParserService:
         ]
 
         # SDK compatibility: some installed versions do not expose the Responses API.
+        log.info(
+            "openai_receipt_parse_start model=%s text_raw_chars=%s",
+            self._config.model,
+            len(text_raw or ""),
+        )
         if hasattr(self._client, "responses"):
             response = self._client.responses.create(
                 model=self._config.model,
@@ -97,6 +107,12 @@ class OpenAiReceiptParserService:
             )
             msg = completion.choices[0].message
             text_out = msg.content or ""
+
+        log.info(
+            "openai_receipt_parse_done model=%s elapsed_ms=%s",
+            self._config.model,
+            int((time.perf_counter() - t0) * 1000),
+        )
 
         data = self._extract_json(text_out)
 

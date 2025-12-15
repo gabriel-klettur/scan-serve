@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,7 +27,16 @@ class Settings(BaseSettings):
     google_vision_api_key: str = Field(default="", validation_alias="GOOGLE_VISION_OCR_API_KEY")
     google_vision_language_hints: list[str] = Field(default_factory=lambda: ["is", "en"], validation_alias="VISION_LANGUAGE_HINTS")
 
-    gpt_5_mini_api_key: str = Field(default="", validation_alias="GPT_5_MINI_API")
+    gpt_5_mini_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "RV_GPT_5_MINI_API",
+            "GPT_5_MINI_API",
+            "GPT_API",
+            "OPENAI_API_KEY",
+        ),
+    )
+    openai_receipt_model: str = "gpt-5-mini"
 
     model_config = SettingsConfigDict(
         env_prefix="RV_",

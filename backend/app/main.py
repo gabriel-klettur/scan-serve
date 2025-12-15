@@ -20,6 +20,8 @@ init_logging(
     color=settings.log_color,
 )
 app.state.logger = get_logger("app")
+app.state.logger.info("config openai_receipt_model=%s", settings.openai_receipt_model)
+app.state.logger.info("config openai_api_key_configured=%s", bool(settings.gpt_5_mini_api_key))
 
 app.add_middleware(
     CORSMiddleware,

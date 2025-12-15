@@ -7,6 +7,59 @@ type InlineToken =
   | { kind: 'italic'; value: string }
   | { kind: 'link'; label: string; href: string };
 
+const splitByHighlight = (text: string, highlight: string): Array<{ text: string; match: boolean }> => {
+  const hay = text;
+  const needle = highlight;
+  const hayLower = hay.toLowerCase();
+  const needleLower = needle.toLowerCase();
+
+  const parts: Array<{ text: string; match: boolean }> = [];
+  let i = 0;
+  while (i < hay.length) {
+    const idx = hayLower.indexOf(needleLower, i);
+    if (idx < 0) {
+      parts.push({ text: hay.slice(i), match: false });
+      break;
+    }
+    if (idx > i) {
+      parts.push({ text: hay.slice(i, idx), match: false });
+    }
+    parts.push({ text: hay.slice(idx, idx + needle.length), match: true });
+    i = idx + needle.length;
+  }
+  return parts;
+};
+
+const maybeHighlight = (
+  nodes: React.ReactNode[],
+  highlight: string | null | undefined,
+  keyPrefix: string,
+): React.ReactNode[] => {
+  const hl = (highlight || '').trim();
+  if (!hl || hl.length < 2) return nodes;
+
+  return nodes.map((n, idx) => {
+    if (typeof n !== 'string') return n;
+
+    const parts = splitByHighlight(n, hl);
+    if (!parts.some((p) => p.match)) return n;
+
+    return (
+      <React.Fragment key={`${keyPrefix}-hl-${idx}`}>
+        {parts.map((p, pIdx) =>
+          p.match ? (
+            <mark key={`${keyPrefix}-m-${idx}-${pIdx}`} className="rounded-sm bg-yellow-200/50 px-0.5">
+              {p.text}
+            </mark>
+          ) : (
+            <React.Fragment key={`${keyPrefix}-t-${idx}-${pIdx}`}>{p.text}</React.Fragment>
+          ),
+        )}
+      </React.Fragment>
+    );
+  });
+};
+
 const tokenizeInline = (input: string): InlineToken[] => {
   if (!input) return [];
 
@@ -182,9 +235,10 @@ const parseBlocks = (md: string): Block[] => {
 
 export interface MarkdownPreviewProps {
   markdown: string;
+  highlight?: string | null;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) => {
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown, highlight }) => {
   const blocks = React.useMemo(() => parseBlocks(markdown), [markdown]);
 
   const proseStyle = React.useMemo(
@@ -216,7 +270,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
         const key = `md-${idx}`;
 
         if (b.kind === 'heading') {
-          const content = renderInline(b.text, key);
+          const content = maybeHighlight(renderInline(b.text, key), highlight, key);
           if (b.level === 1) return <h1 key={key}>{content}</h1>;
           if (b.level === 2) return <h2 key={key}>{content}</h2>;
           if (b.level === 3) return <h3 key={key}>{content}</h3>;
@@ -226,9 +280,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
         }
 
         if (b.kind === 'code') {
+          const codeContent = maybeHighlight([b.code], highlight, `${key}-code`);
           return (
             <pre key={key} className="!my-4">
-              <code className={b.lang ? `language-${b.lang}` : undefined}>{b.code}</code>
+              <code className={b.lang ? `language-${b.lang}` : undefined}>{codeContent}</code>
             </pre>
           );
         }
@@ -237,7 +292,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
           return (
             <ul key={key}>
               {b.items.map((it, i) => (
-                <li key={`${key}-li-${i}`}>{renderInline(it, `${key}-li-${i}`)}</li>
+                <li key={`${key}-li-${i}`}>
+                  {maybeHighlight(renderInline(it, `${key}-li-${i}`), highlight, `${key}-li-${i}`)}
+                </li>
               ))}
             </ul>
           );
@@ -247,7 +304,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
           return (
             <ol key={key}>
               {b.items.map((it, i) => (
-                <li key={`${key}-li-${i}`}>{renderInline(it, `${key}-li-${i}`)}</li>
+                <li key={`${key}-li-${i}`}>
+                  {maybeHighlight(renderInline(it, `${key}-li-${i}`), highlight, `${key}-li-${i}`)}
+                </li>
               ))}
             </ol>
           );
@@ -260,7 +319,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
                 <thead>
                   <tr>
                     {b.header.map((h, i) => (
-                      <th key={`${key}-th-${i}`}>{renderInline(h, `${key}-th-${i}`)}</th>
+                      <th key={`${key}-th-${i}`}>
+                        {maybeHighlight(renderInline(h, `${key}-th-${i}`), highlight, `${key}-th-${i}`)}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -268,7 +329,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
                   {b.rows.map((row, r) => (
                     <tr key={`${key}-tr-${r}`}>
                       {row.map((cell, c) => (
-                        <td key={`${key}-td-${r}-${c}`}>{renderInline(cell, `${key}-td-${r}-${c}`)}</td>
+                        <td key={`${key}-td-${r}-${c}`}>
+                          {maybeHighlight(renderInline(cell, `${key}-td-${r}-${c}`), highlight, `${key}-td-${r}-${c}`)}
+                        </td>
                       ))}
                     </tr>
                   ))}
@@ -278,7 +341,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown }) =>
           );
         }
 
-        return <p key={key}>{renderInline(b.text, key)}</p>;
+        return <p key={key}>{maybeHighlight(renderInline(b.text, key), highlight, key)}</p>;
       })}
     </div>
   );

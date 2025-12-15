@@ -47,7 +47,7 @@ def _openai_receipt_parser() -> OpenAiReceiptParserService:
     return OpenAiReceiptParserService(
         OpenAiReceiptParserConfig(
             api_key=settings.gpt_5_mini_api_key,
-            model="gpt-5-mini",
+            model=settings.openai_receipt_model,
         )
     )
 

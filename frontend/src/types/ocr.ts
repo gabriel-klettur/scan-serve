@@ -34,5 +34,6 @@ export interface OCRState {
   result: OCRResponse | null;
   error: string | null;
   showBoundingBoxes: boolean;
-  selectedBox: BoundingBox | null;
+  hoveredBoxIndex: number | null;
+  selectedBoxIndex: number | null;
 }
