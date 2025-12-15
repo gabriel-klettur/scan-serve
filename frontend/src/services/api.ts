@@ -49,6 +49,96 @@ export const parseReceiptWithAI = async (payload: {
   return response.data;
 };
 
+export type AiParseStreamEvent =
+  | { type: 'pipeline_start'; agents?: Record<string, string> }
+  | { type: 'stage_start'; stage: string; agent?: string }
+  | { type: 'stage_end'; stage: string; agent?: string }
+  | { type: 'handoff'; from_stage: string; to_stage: string; from_agent?: string; to_agent?: string }
+  | { type: 'note'; stage?: string; agent?: string; text: string }
+  | { type: 'result'; data: AiReceiptParseResponse }
+  | { type: 'pipeline_done'; elapsed_ms?: number }
+  | { type: 'error'; detail?: string };
+
+export const parseReceiptWithAIStream = async (
+  payload: {
+    text_raw: string;
+    fields?: OCRResponse['fields'];
+    boxes?: OCRResponse['boxes'];
+  },
+  onEvent: (event: AiParseStreamEvent) => void,
+): Promise<AiReceiptParseResponse> => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 180000);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/ocr/ai/parse/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        detail = body?.detail || detail;
+      } catch {
+        // ignore
+      }
+      throw new Error(detail);
+    }
+
+    if (!res.body) {
+      throw new Error('Streaming response not supported by the browser');
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let finalResult: AiReceiptParseResponse | null = null;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        let evt: AiParseStreamEvent;
+        try {
+          evt = JSON.parse(trimmed) as AiParseStreamEvent;
+        } catch {
+          continue;
+        }
+
+        onEvent(evt);
+
+        if (evt.type === 'error') {
+          throw new Error(evt.detail || 'AI parse failed');
+        }
+        if (evt.type === 'result') {
+          finalResult = evt.data;
+        }
+      }
+    }
+
+    if (!finalResult) {
+      throw new Error('AI parse finished without a result');
+    }
+    return finalResult;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
 export type OcrEngine = 'easyocr' | 'vision' | 'both';
 
 export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = 'easyocr'): Promise<OCRResponse> => {

@@ -1,9 +1,11 @@
 from __future__ import annotations
  
+import json
 import logging
 import re
+from typing import Iterator
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
  
 from app.core.deps import (
     get_google_vision_ocr_service,
@@ -193,10 +195,34 @@ async def ocr_ai_parse_endpoint(
         raise HTTPException(status_code=400, detail="text_raw is required")
 
     try:
-        return parser.parse(text_raw=payload.text_raw, fields_hint=payload.fields)
+        return parser.parse(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes)
     except Exception as e:
         logging.getLogger("app").exception("openai_receipt_parse_failed")
         msg = str(e) or "OpenAI receipt parse failed"
         if "api key" in msg.lower() and "not configured" in msg.lower():
             raise HTTPException(status_code=400, detail=msg) from e
         raise HTTPException(status_code=500, detail=msg) from e
+
+
+@router.post("/ocr/ai/parse/stream")
+async def ocr_ai_parse_stream_endpoint(
+    payload: AiReceiptParseRequest,
+    parser=Depends(get_openai_receipt_parser_service),
+):
+    if not payload.text_raw or not payload.text_raw.strip():
+        raise HTTPException(status_code=400, detail="text_raw is required")
+
+    def event_stream() -> Iterator[str]:
+        try:
+            for event in parser.parse_stream(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes):
+                yield json.dumps(event, ensure_ascii=False) + "\n"
+        except Exception as e:
+            logging.getLogger("app").exception("openai_receipt_parse_stream_failed")
+            msg = str(e) or "OpenAI receipt parse failed"
+            yield json.dumps({"type": "error", "detail": msg}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache"},
+    )

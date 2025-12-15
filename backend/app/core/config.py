@@ -37,6 +37,10 @@ class Settings(BaseSettings):
         ),
     )
     openai_receipt_model: str = "gpt-5-mini"
+    openai_receipt_organizer_model: str | None = None
+    openai_receipt_auditor_model: str | None = None
+    openai_receipt_stylist_model: str | None = None
+    openai_receipt_json_retries: int = 1
 
     model_config = SettingsConfigDict(
         env_prefix="RV_",

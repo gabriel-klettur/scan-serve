@@ -4,7 +4,7 @@ import { copyToClipboard } from '@/utils/image';
 import { buildSectionedJson, formatBoxesAsSectionedMarkdown, formatBoxesAsSectionedText } from '@/utils/ocrLayout';
 import { parseReceiptMarkdown } from '@/utils/receipt/parseReceiptMarkdown';
 import { renderReceiptHtmlFromDocument } from '@/utils/receipt/renderReceiptHtml';
-import { parseReceiptWithAI } from '@/services/api';
+import { AiParseStreamEvent, parseReceiptWithAI, parseReceiptWithAIStream } from '@/services/api';
 import { toast } from 'sonner';
 import { OCRTextPanel } from '@/components/results/OCRTextPanel';
 
@@ -57,6 +57,8 @@ export const OCRText = () => {
   const [activeFormat, setActiveFormat] = useState<'text' | 'preview' | 'markdown' | 'json' | 'receipt'>('text');
   const [aiElapsedMs, setAiElapsedMs] = useState(0);
   const [aiLastDurationMs, setAiLastDurationMs] = useState<number | null>(null);
+  const [aiAgentLabel, setAiAgentLabel] = useState<string | null>(null);
+  const [aiNotes, setAiNotes] = useState<string[]>([]);
   const aiStartMsRef = useRef<number | null>(null);
   const aiTimerRef = useRef<number | null>(null);
 
@@ -120,6 +122,7 @@ export const OCRText = () => {
     if (!result) return;
     if (isAiProcessing) return;
     setAiError(null);
+    setAiResult(null);
 
     aiStartMsRef.current = Date.now();
     setAiElapsedMs(0);
@@ -133,16 +136,56 @@ export const OCRText = () => {
     }, 250);
 
     setAiStatus('processing');
+    setAiAgentLabel(null);
+    setAiNotes([]);
     try {
-      const parsed = await parseReceiptWithAI({
-        text_raw: result.text_raw,
-        fields: result.fields,
-        boxes: result.boxes,
-      });
+      const onEvent = (evt: AiParseStreamEvent) => {
+        if (evt.type === 'stage_start') {
+          setAiAgentLabel(evt.agent || evt.stage);
+        }
+        if (evt.type === 'handoff') {
+          const to = evt.to_agent || evt.to_stage;
+          const from = evt.from_agent || evt.from_stage;
+          setAiAgentLabel(`Transfiriendo a ${to}…`);
+          setAiNotes((prev) => {
+            const next = prev.length >= 60 ? prev.slice(prev.length - 59) : prev;
+            return [...next, `${from} → ${to}`];
+          });
+        }
+        if (evt.type === 'note') {
+          const text = (evt.text || '').trim();
+          if (!text) return;
+          setAiNotes((prev) => {
+            const next = prev.length >= 60 ? prev.slice(prev.length - 59) : prev;
+            return [...next, text];
+          });
+        }
+      };
+
+      let parsed;
+      try {
+        parsed = await parseReceiptWithAIStream(
+          {
+            text_raw: result.text_raw,
+            fields: result.fields,
+            boxes: result.boxes,
+          },
+          onEvent,
+        );
+      } catch {
+        parsed = await parseReceiptWithAI({
+          text_raw: result.text_raw,
+          fields: result.fields,
+          boxes: result.boxes,
+        });
+      }
       setAiResult(parsed);
       toast.success('Mejorado con IA');
     } catch (e: any) {
+      setAiResult(null);
+      const isAbort = e?.name === 'AbortError';
       const isTimeout =
+        isAbort ||
         e?.code === 'ECONNABORTED' ||
         (typeof e?.message === 'string' && e.message.toLowerCase().includes('timeout'));
 
@@ -246,6 +289,8 @@ export const OCRText = () => {
       aiHasResult={Boolean(aiResult)}
       lastDurationLabel={lastDurationLabel}
       elapsedLabel={elapsedLabel}
+      aiAgentLabel={aiAgentLabel}
+      aiNotes={aiNotes}
       highlightText={highlightTextTab}
       highlightMarkdown={highlightMarkdownTab}
       highlightJson={highlightJsonTab}

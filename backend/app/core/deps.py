@@ -48,6 +48,10 @@ def _openai_receipt_parser() -> OpenAiReceiptParserService:
         OpenAiReceiptParserConfig(
             api_key=settings.gpt_5_mini_api_key,
             model=settings.openai_receipt_model,
+            organizer_model=settings.openai_receipt_organizer_model,
+            auditor_model=settings.openai_receipt_auditor_model,
+            stylist_model=settings.openai_receipt_stylist_model,
+            json_retries=settings.openai_receipt_json_retries,
         )
     )
 

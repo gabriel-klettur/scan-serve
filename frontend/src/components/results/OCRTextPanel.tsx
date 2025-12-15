@@ -6,7 +6,7 @@ import { MarkdownPreview } from '@/components/ui/MarkdownPreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HighlightedPre } from '@/components/results/HighlightedPre';
 
-export const OCRTextPanel = (props: {
+export interface OCRTextPanelProps {
   activeFormat: 'text' | 'preview' | 'markdown' | 'json' | 'receipt';
   setActiveFormat: (v: 'text' | 'preview' | 'markdown' | 'json' | 'receipt') => void;
   isAiProcessing: boolean;
@@ -17,6 +17,8 @@ export const OCRTextPanel = (props: {
   aiHasResult: boolean;
   lastDurationLabel: string | null;
   elapsedLabel: string;
+  aiAgentLabel?: string | null;
+  aiNotes?: string[];
   highlightText: string | null;
   highlightMarkdown?: string | null;
   highlightJson?: string | null;
@@ -24,7 +26,9 @@ export const OCRTextPanel = (props: {
   markdownView: string;
   jsonView: string;
   receiptHtml: string;
-}): JSX.Element => {
+}
+
+export const OCRTextPanel = (props: OCRTextPanelProps): JSX.Element => {
   const {
     activeFormat,
     setActiveFormat,
@@ -36,6 +40,8 @@ export const OCRTextPanel = (props: {
     aiHasResult,
     lastDurationLabel,
     elapsedLabel,
+    aiAgentLabel,
+    aiNotes,
     highlightText,
     highlightMarkdown,
     highlightJson,
@@ -123,11 +129,26 @@ export const OCRTextPanel = (props: {
         <div className="relative flex-1 min-h-0" aria-busy={isAiProcessing}>
           {isAiProcessing && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-card/90 px-4 py-3 shadow-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <div className="leading-tight">
+              <div className="w-full max-w-xl flex items-start gap-3 rounded-lg border border-border bg-card/90 px-4 py-3 shadow-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-primary mt-0.5" />
+                <div className="leading-tight min-w-0 flex-1">
                   <div className="text-sm font-medium text-foreground">Analizando con IA… ({elapsedLabel})</div>
-                  <div className="text-xs text-muted-foreground">Esto puede tardar unos segundos</div>
+                  {aiAgentLabel ? (
+                    <div className="text-xs text-muted-foreground mt-0.5">Agente: {aiAgentLabel}</div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground mt-0.5">Esto puede tardar unos segundos</div>
+                  )}
+
+                  {aiNotes && aiNotes.length > 0 && (
+                    <div className="mt-2 max-h-28 overflow-auto rounded-md border border-border bg-background/50 px-2 py-1">
+                      <div className="text-[11px] text-muted-foreground">Progreso</div>
+                      <div className="text-xs text-foreground/90 whitespace-pre-wrap break-words">
+                        {aiNotes.slice(-8).map((n, idx) => (
+                          <div key={`${idx}-${n.slice(0, 12)}`}>- {n}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
