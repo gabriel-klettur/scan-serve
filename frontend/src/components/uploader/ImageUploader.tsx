@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Image, X, AlertCircle, Camera } from 'lucide-react';
 import { useOCRStore } from '@/store/ocrStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
-import { createReceiptOnServer } from '@/services/api';
+import { createReceiptOnServer, type OcrEngine } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { createReceipt } from '@/features/receipts/db/receiptsRepo';
 import { CameraCapture } from '@/features/receipts/components/CameraCapture';
@@ -15,6 +16,8 @@ export const ImageUploader = () => {
   const { status, originalImage, setStatus, setOriginalImage, setResult, setError, reset } = useOCRStore();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [engineDialogOpen, setEngineDialogOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const captureInputRef = useRef<HTMLInputElement | null>(null);
 
   const isLikelyMobile = (() => {
@@ -51,7 +54,7 @@ export const ImageUploader = () => {
     captureInputRef.current?.click();
   };
 
-  const processImage = useCallback(async (file: File) => {
+  const processImage = useCallback(async (file: File, engine: OcrEngine) => {
     try {
       setStatus('uploading');
       setValidationError(null);
@@ -61,7 +64,7 @@ export const ImageUploader = () => {
       
       setStatus('processing');
 
-      const ocrResult = await createReceiptOnServer(file);
+      const ocrResult = await createReceiptOnServer(file, engine);
       setResult(ocrResult);
 
       try {
@@ -87,6 +90,19 @@ export const ImageUploader = () => {
     }
   }, [setStatus, setOriginalImage, setResult, setError]);
 
+  const promptEngineAndProcess = useCallback((file: File) => {
+    setPendingFile(file);
+    setEngineDialogOpen(true);
+  }, []);
+
+  const handleEngineChoice = useCallback((engine: OcrEngine) => {
+    if (!pendingFile) return;
+    const file = pendingFile;
+    setEngineDialogOpen(false);
+    setPendingFile(null);
+    processImage(file, engine);
+  }, [pendingFile, processImage]);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
@@ -97,8 +113,8 @@ export const ImageUploader = () => {
       return;
     }
 
-    processImage(file);
-  }, [processImage]);
+    promptEngineAndProcess(file);
+  }, [promptEngineAndProcess]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -127,7 +143,7 @@ export const ImageUploader = () => {
     }
 
     setValidationError(null);
-    processImage(file);
+    promptEngineAndProcess(file);
     e.target.value = '';
   };
 
@@ -160,6 +176,36 @@ export const ImageUploader = () => {
 
   return (
     <div className="space-y-3">
+      <Dialog open={engineDialogOpen} onOpenChange={(open) => {
+        setEngineDialogOpen(open);
+        if (!open) {
+          setPendingFile(null);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>How do you want to scan this receipt?</DialogTitle>
+            <DialogDescription>
+              Choose the OCR engine to process the image.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEngineDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="outline" onClick={() => handleEngineChoice('easyocr')}>
+              EasyOCR
+            </Button>
+            <Button type="button" variant="outline" onClick={() => handleEngineChoice('vision')}>
+              Google Vision
+            </Button>
+            <Button type="button" onClick={() => handleEngineChoice('both')}>
+              Both
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div
         {...getRootProps()}
         className={cn(
@@ -242,7 +288,7 @@ export const ImageUploader = () => {
       {showCamera && (
         <CameraCapture
           disabled={isProcessing}
-          onCapture={(file) => processImage(file)}
+          onCapture={(file) => promptEngineAndProcess(file)}
         />
       )}
 

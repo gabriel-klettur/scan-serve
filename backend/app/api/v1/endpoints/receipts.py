@@ -23,6 +23,7 @@ async def create_receipt(
     file: UploadFile = File(...),
     folderId: Optional[str] = Form(default=None),
     runOcr: bool = Form(default=True),
+    ocrEngine: str = Form(default="easyocr", pattern="^(easyocr|vision|both)$"),
     storage=Depends(get_storage_service),
     service=Depends(get_receipts_service),
 ) -> Receipt:
@@ -31,14 +32,18 @@ async def create_receipt(
 
     image_path, rel_url = storage.save_upload(file, subdir="receipts")
 
-    return service.add_receipt(
-        folder_id=folderId,
-        original_file_name=file.filename or "receipt",
-        mime_type=file.content_type or "application/octet-stream",
-        image_url=rel_url,
-        ocr_image_path=str(image_path),
-        run_ocr=runOcr,
-    )
+    try:
+        return service.add_receipt(
+            folder_id=folderId,
+            original_file_name=file.filename or "receipt",
+            mime_type=file.content_type or "application/octet-stream",
+            image_url=rel_url,
+            ocr_image_path=str(image_path),
+            run_ocr=runOcr,
+            ocr_engine=ocrEngine,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.patch("/{receipt_id}/folder", response_model=Receipt)

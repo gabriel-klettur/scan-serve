@@ -19,6 +19,13 @@ export interface OCRResponse {
   boxes: BoundingBox[];
 }
 
+export interface AiReceiptParseResponse {
+  fields: OCRFields;
+  text_clean: string;
+  markdown: string;
+  data: Record<string, unknown>;
+}
+
 export type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error';
 
 export interface OCRState {

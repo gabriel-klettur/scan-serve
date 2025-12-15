@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Scan, FolderOpen } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
 import { ImageUploader } from '@/components/uploader/ImageUploader';
@@ -15,8 +16,46 @@ import { Button } from '@/components/ui/button';
 const Home = () => {
   const { status, result } = useOCRStore();
 
+  const [topRowHeight, setTopRowHeight] = useState<number>(560);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeState = useRef<{ dragging: boolean; startY: number; startHeight: number }>({
+    dragging: false,
+    startY: 0,
+    startHeight: 560,
+  });
+
   const isProcessing = status === 'uploading' || status === 'processing';
   const hasResult = status === 'success' && result;
+
+  const clamp = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v));
+
+  const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!hasResult) return;
+    setIsResizing(true);
+    resizeState.current = { dragging: true, startY: e.clientY, startHeight: topRowHeight };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'nwse-resize';
+  };
+
+  const onResizeMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizeState.current.dragging) return;
+    const delta = e.clientY - resizeState.current.startY;
+    setTopRowHeight(clamp(resizeState.current.startHeight + delta, 360, 1000));
+  };
+
+  const endResize = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizeState.current.dragging) return;
+    resizeState.current.dragging = false;
+    setIsResizing(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,20 +136,27 @@ const Home = () => {
 
         {/* Main Grid */}
         {!isProcessing && (
-          <div className={`grid gap-6 ${hasResult ? 'lg:grid-cols-3' : 'max-w-2xl mx-auto'}`}>
-            {/* Upload Section */}
+          <div
+            className={
+              hasResult
+                ? 'grid gap-6 lg:grid-cols-2 lg:items-stretch'
+                : 'grid gap-6 max-w-2xl mx-auto'
+            }
+          >
+            {/* Scan Result / Upload */}
             <motion.div
-              layout
-              className={hasResult ? 'lg:col-span-2' : ''}
+              layout={!isResizing}
+              className={hasResult ? 'lg:order-1 min-h-0' : ''}
+              style={hasResult ? { height: topRowHeight } : undefined}
             >
-              <Card>
+              <Card className={hasResult ? 'h-full flex flex-col relative' : ''}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Scan className="w-5 h-5 text-primary" />
                     {hasResult ? 'Scan Result' : 'Upload Receipt'}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className={hasResult ? 'space-y-6 flex-1 min-h-0' : 'space-y-6'}>
                   {!hasResult && <ImageUploader />}
                   {hasResult && (
                     <>
@@ -124,15 +170,58 @@ const Home = () => {
                     </>
                   )}
                 </CardContent>
+
+                {hasResult && (
+                  <div
+                    role="separator"
+                    aria-label="Resize panels"
+                    onPointerDown={startResize}
+                    onPointerMove={onResizeMove}
+                    onPointerUp={endResize}
+                    onPointerCancel={endResize}
+                    className="absolute bottom-3 right-3 h-4 w-4 cursor-nwse-resize rounded-sm border border-border bg-card/80 backdrop-blur"
+                    style={{ touchAction: 'none' }}
+                  />
+                )}
               </Card>
             </motion.div>
 
-            {/* Results Sidebar */}
+            {/* Extracted Text (desktop) */}
             {hasResult && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="hidden lg:block space-y-6"
+                className="hidden lg:block lg:order-2 min-h-0"
+                style={{ height: topRowHeight }}
+              >
+                <Card className="h-full flex flex-col relative">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Extracted Text</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 min-h-0">
+                    <OCRText />
+                  </CardContent>
+
+                  <div
+                    role="separator"
+                    aria-label="Resize panels"
+                    onPointerDown={startResize}
+                    onPointerMove={onResizeMove}
+                    onPointerUp={endResize}
+                    onPointerCancel={endResize}
+                    className="absolute bottom-3 right-3 h-4 w-4 cursor-nwse-resize rounded-sm border border-border bg-card/80 backdrop-blur"
+                    style={{ touchAction: 'none' }}
+                  />
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Analysis Results (desktop, below) */}
+            {hasResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="hidden lg:block lg:order-3 lg:col-span-2"
               >
                 <Card>
                   <CardHeader>
@@ -142,15 +231,6 @@ const Home = () => {
                     <OCRFields />
                     <ConfidenceMeter />
                     <ExportActions />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Extracted Text</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <OCRText />
                   </CardContent>
                 </Card>
               </motion.div>

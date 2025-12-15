@@ -1,29 +1,106 @@
 import { motion } from 'framer-motion';
 import { Calendar, Store, DollarSign, HelpCircle } from 'lucide-react';
+import { useMemo } from 'react';
 import { useOCRStore } from '@/store/ocrStore';
 
 export const OCRFields = () => {
-  const { result } = useOCRStore();
+  const { result, aiResult } = useOCRStore();
 
   if (!result?.fields) return null;
+
+  const totalValue = useMemo(() => {
+    const parseAmount = (raw: string): number | null => {
+      let s = raw.trim();
+      if (!s) return null;
+      s = s.replace(/[^0-9,\.\-]/g, '');
+      if (!s || s === '-' || s === '.' || s === ',') return null;
+      const neg = s.startsWith('-');
+      s = s.replace(/^-+/, '');
+      if (!s) return null;
+
+      if (s.includes('.') && s.includes(',')) {
+        const lastDot = s.lastIndexOf('.');
+        const lastComma = s.lastIndexOf(',');
+        const thousandsSep = lastDot > lastComma ? ',' : '.';
+        const decimalSep = lastDot > lastComma ? '.' : ',';
+        s = s.split(thousandsSep).join('');
+        s = s.split(decimalSep).join('.');
+        const v = Number.parseFloat(s);
+        return Number.isFinite(v) ? (neg ? -v : v) : null;
+      }
+
+      const isThousandGrouped = (sep: '.' | ','): boolean => {
+        const parts = s.split(sep);
+        return parts.length >= 2 && parts.slice(1).every((p) => p.length === 3);
+      };
+
+      if (s.includes('.') && isThousandGrouped('.')) {
+        const v = Number.parseFloat(s.split('.').join(''));
+        return Number.isFinite(v) ? (neg ? -v : v) : null;
+      }
+      if (s.includes(',') && isThousandGrouped(',')) {
+        const v = Number.parseFloat(s.split(',').join(''));
+        return Number.isFinite(v) ? (neg ? -v : v) : null;
+      }
+
+      if (s.includes(',')) {
+        const v = Number.parseFloat(s.replace(/,/g, '.'));
+        return Number.isFinite(v) ? (neg ? -v : v) : null;
+      }
+
+      const v = Number.parseFloat(s);
+      return Number.isFinite(v) ? (neg ? -v : v) : null;
+    };
+
+    const extractAmounts = (line: string): number[] => {
+      const tokens = line.match(/-?\d[\d\.,]*/g) ?? [];
+      const out: number[] = [];
+      tokens.forEach((t) => {
+        const v = parseAmount(t);
+        if (typeof v === 'number') out.push(v);
+      });
+      return out;
+    };
+
+    if (typeof aiResult?.fields?.total === 'number') return aiResult.fields.total;
+
+    const sourceText = (aiResult?.text_clean || result.text_raw || '').toString();
+    const lines = sourceText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+    for (const ln of lines) {
+      if (ln.toLowerCase().includes('samtals')) {
+        const amts = extractAmounts(ln);
+        if (amts.length) return Math.abs(amts[amts.length - 1]);
+      }
+    }
+
+    for (const ln of lines) {
+      if (/\bkort\b/i.test(ln)) {
+        const amts = extractAmounts(ln);
+        if (amts.length) return Math.abs(amts[amts.length - 1]);
+      }
+    }
+
+    return typeof result.fields.total === 'number' ? result.fields.total : null;
+  }, [aiResult?.fields?.total, aiResult?.text_clean, result.fields.total, result.text_raw]);
 
   const fields = [
     {
       icon: Store,
       label: 'Merchant',
-      value: result.fields.merchant,
+      value: aiResult?.fields?.merchant || result.fields.merchant,
       color: 'text-primary',
     },
     {
       icon: Calendar,
       label: 'Date',
-      value: result.fields.date,
+      value: aiResult?.fields?.date || result.fields.date,
       color: 'text-warning',
     },
     {
       icon: DollarSign,
       label: 'Total',
-      value: result.fields.total ? `S/. ${result.fields.total.toFixed(2)}` : undefined,
+      value: typeof totalValue === 'number' ? totalValue.toFixed(2) : undefined,
       color: 'text-success',
     },
   ];

@@ -52,7 +52,7 @@ export const BeforeAfterViewer = () => {
   }, [imageUrl]);
 
   return (
-    <div className="space-y-4">
+    <div className="h-full flex flex-col gap-4 min-h-0">
       {/* Controls */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* View Toggle */}
@@ -106,11 +106,9 @@ export const BeforeAfterViewer = () => {
 
       {/* Image Viewer */}
       <motion.div
-        layout
-        className="relative rounded-xl border border-border bg-card overflow-hidden"
-        style={{ minHeight: '400px' }}
+        className="relative rounded-xl border border-border bg-card overflow-hidden flex-1 min-h-0"
       >
-        <div className="overflow-auto max-h-[500px] p-4">
+        <div className="overflow-auto h-full p-4">
           <div
             className="relative mx-auto transition-transform duration-200"
             style={{

@@ -8,13 +8,15 @@ from app.models.folders import ReceiptFolder
 from app.models.ocr import BoundingBox, OCRFields, OCRResponse
 from app.models.receipts import Receipt
 from app.repositories.json_db import JsonDb
+from app.services.google_vision_ocr_service import GoogleVisionOcrService
 from app.services.ocr_service import OcrService
 
 
 class ReceiptsService:
-    def __init__(self, db: JsonDb, ocr_service: OcrService) -> None:
+    def __init__(self, db: JsonDb, ocr_service: OcrService, vision_ocr_service: GoogleVisionOcrService) -> None:
         self._db = db
         self._ocr_service = ocr_service
+        self._vision_ocr_service = vision_ocr_service
 
     def list_folders(self) -> list[ReceiptFolder]:
         data = self._db.read()
@@ -79,20 +81,38 @@ class ReceiptsService:
         image_url: str,
         ocr_image_path: str,
         run_ocr: bool,
+        ocr_engine: str = "easyocr",
     ) -> Receipt:
         now = int(time.time() * 1000)
 
         ocr: Optional[OCRResponse] = None
         if run_ocr:
-            lines = self._ocr_service.read(ocr_image_path)
+            if ocr_engine in {"vision", "both"}:
+                if not getattr(self._vision_ocr_service, "_config", None) or not self._vision_ocr_service._config.api_key:  # type: ignore[attr-defined]
+                    raise RuntimeError("Google Vision API key is not configured")
+                vision_lines = self._vision_ocr_service.read(ocr_image_path)
+            else:
+                vision_lines = []
+
+            if ocr_engine in {"easyocr", "both"}:
+                easy_lines = self._ocr_service.read(ocr_image_path)
+            else:
+                easy_lines = []
+
+            lines = vision_lines if vision_lines else easy_lines
             text_lines = [l.text for l in lines]
             text_raw = "\n".join(text_lines)
             conf_avg = (sum(l.confidence for l in lines) / len(lines)) if lines else 0.0
 
+            if ocr_engine == "both" and easy_lines:
+                combined_text = "\n".join([l.text for l in (vision_lines + easy_lines)])
+            else:
+                combined_text = text_raw
+
             fields = OCRFields(
                 merchant=self._ocr_service.guess_merchant(text_lines),
-                date=self._ocr_service.guess_date(text_raw),
-                total=self._ocr_service.guess_total(text_raw),
+                date=self._ocr_service.guess_date(text_raw) or self._ocr_service.guess_date(combined_text),
+                total=self._ocr_service.guess_total(text_raw) or self._ocr_service.guess_total(combined_text),
             )
 
             boxes = [BoundingBox(text=l.text, bbox=l.bbox, confidence=l.confidence) for l in lines]

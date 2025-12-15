@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +23,11 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_json: bool = False
     log_color: bool = True
+
+    google_vision_api_key: str = Field(default="", validation_alias="GOOGLE_VISION_OCR_API_KEY")
+    google_vision_language_hints: list[str] = Field(default_factory=lambda: ["is", "en"], validation_alias="VISION_LANGUAGE_HINTS")
+
+    gpt_5_mini_api_key: str = Field(default="", validation_alias="GPT_5_MINI_API")
 
     model_config = SettingsConfigDict(
         env_prefix="RV_",

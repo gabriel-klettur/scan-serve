@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { OCRResponse } from '@/types/ocr';
+import { OCRResponse, AiReceiptParseResponse } from '@/types/ocr';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -38,10 +38,24 @@ export const uploadImageForOCR = async (file: File): Promise<OCRResponse> => {
   return response.data;
 };
 
-export const createReceiptOnServer = async (file: File): Promise<OCRResponse> => {
+export const parseReceiptWithAI = async (payload: {
+  text_raw: string;
+  fields?: OCRResponse['fields'];
+  boxes?: OCRResponse['boxes'];
+}): Promise<AiReceiptParseResponse> => {
+  const response = await apiClient.post<AiReceiptParseResponse>('/ocr/ai/parse', payload, {
+    timeout: 180000,
+  });
+  return response.data;
+};
+
+export type OcrEngine = 'easyocr' | 'vision' | 'both';
+
+export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = 'easyocr'): Promise<OCRResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('runOcr', 'true');
+  formData.append('ocrEngine', ocrEngine);
 
   const response = await apiClient.post<ServerReceipt>('/api/v1/receipts', formData, {
     headers: {
