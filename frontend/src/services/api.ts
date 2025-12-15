@@ -141,7 +141,7 @@ export const parseReceiptWithAIStream = async (
 
 export type OcrEngine = 'easyocr' | 'vision' | 'both';
 
-export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = 'easyocr'): Promise<OCRResponse> => {
+export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = 'vision'): Promise<OCRResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('runOcr', 'true');

@@ -54,7 +54,7 @@ export const OCRText = () => {
     selectedBoxIndex,
   } = useOCRStore();
   const [copied, setCopied] = useState(false);
-  const [activeFormat, setActiveFormat] = useState<'text' | 'preview' | 'markdown' | 'json' | 'receipt'>('text');
+  const [activeFormat, setActiveFormat] = useState<'text' | 'preview' | 'markdown' | 'json' | 'receipt'>('preview');
   const [aiElapsedMs, setAiElapsedMs] = useState(0);
   const [aiLastDurationMs, setAiLastDurationMs] = useState<number | null>(null);
   const [aiAgentLabel, setAiAgentLabel] = useState<string | null>(null);
@@ -109,6 +109,11 @@ export const OCRText = () => {
   const isAiProcessing = aiStatus === 'processing' || aiStatus === 'uploading';
 
   useEffect(() => {
+    if (!result) return;
+    setActiveFormat('preview');
+  }, [result]);
+
+  useEffect(() => {
     if (isAiProcessing) return;
     aiStartMsRef.current = null;
     setAiElapsedMs(0);
@@ -121,6 +126,7 @@ export const OCRText = () => {
   const handleImproveWithAI = async () => {
     if (!result) return;
     if (isAiProcessing) return;
+    setActiveFormat('preview');
     setAiError(null);
     setAiResult(null);
 

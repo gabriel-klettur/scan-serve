@@ -1,10 +1,19 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy, Loader2, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { MarkdownPreview } from '@/components/ui/MarkdownPreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HighlightedPre } from '@/components/results/HighlightedPre';
+import { cn } from '@/lib/utils';
 
 export interface OCRTextPanelProps {
   activeFormat: 'text' | 'preview' | 'markdown' | 'json' | 'receipt';
@@ -51,6 +60,88 @@ export const OCRTextPanel = (props: OCRTextPanelProps): JSX.Element => {
     receiptHtml,
   } = props;
 
+  const aiAgentKey = useMemo(() => {
+    const raw = (aiAgentLabel || '').trim();
+    if (!raw) return null;
+    if (raw.toLowerCase().startsWith('transfiriendo a ')) {
+      const to = raw.replace(/^transfiriendo a\s+/i, '').replace(/…+$/g, '').trim();
+      return to.split('(')[0]?.trim().toLowerCase() || null;
+    }
+    return raw.split('(')[0]?.trim().toLowerCase() || null;
+  }, [aiAgentLabel]);
+
+  const aiActivitySteps = useMemo(() => {
+    const key = aiAgentKey;
+    const stepsByAgent: Record<string, string[]> = {
+      organizer: [
+        'Detectando idioma y formato del ticket',
+        'Normalizando líneas y espacios del OCR',
+        'Agrupando texto por secciones (cabecera, items, totales)',
+        'Detectando importes y monedas con heurísticas',
+        'Preparando handoff al siguiente agente',
+      ],
+      auditor: [
+        'Comprobando coherencia entre subtotal, impuestos y total',
+        'Revisando que cada importe tenga un concepto asociado',
+        'Validando fechas y formato de número',
+        'Marcando posibles duplicados o líneas ruidosas',
+        'Ajustando confianza y notas de revisión',
+      ],
+      extractor: [
+        'Extrayendo campos clave (merchant, fecha, total)',
+        'Detectando items y cantidades',
+        'Calculando totales derivados para validar resultados',
+        'Estructurando el resultado en JSON',
+        'Generando Markdown para vista previa',
+      ],
+    };
+
+    if (!key) return ['Procesando…'];
+    if (key.includes('organizer')) return stepsByAgent.organizer;
+    if (key.includes('auditor')) return stepsByAgent.auditor;
+    if (key.includes('extract')) return stepsByAgent.extractor;
+
+    return [
+      'Preparando contexto de análisis',
+      'Procesando el OCR y limpiando texto',
+      'Extrayendo campos y estructura del ticket',
+      'Verificando coherencia de importes',
+      'Consolidando resultado final',
+    ];
+  }, [aiAgentKey]);
+
+  const [aiActivityIndex, setAiActivityIndex] = useState(0);
+  const aiActivityTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isAiProcessing) {
+      setAiActivityIndex(0);
+      if (aiActivityTimerRef.current !== null) {
+        window.clearInterval(aiActivityTimerRef.current);
+        aiActivityTimerRef.current = null;
+      }
+      return;
+    }
+
+    setAiActivityIndex(0);
+    if (aiActivityTimerRef.current !== null) {
+      window.clearInterval(aiActivityTimerRef.current);
+    }
+    aiActivityTimerRef.current = window.setInterval(() => {
+      setAiActivityIndex((prev) => {
+        const len = aiActivitySteps.length || 1;
+        return (prev + 1) % len;
+      });
+    }, 1000);
+
+    return () => {
+      if (aiActivityTimerRef.current !== null) {
+        window.clearInterval(aiActivityTimerRef.current);
+        aiActivityTimerRef.current = null;
+      }
+    };
+  }, [isAiProcessing, aiActivitySteps]);
+
   const mdHighlight = highlightMarkdown ?? highlightText;
   const jsHighlight = highlightJson ?? highlightText;
 
@@ -70,18 +161,34 @@ export const OCRTextPanel = (props: OCRTextPanelProps): JSX.Element => {
             <TabsTrigger value="preview" className="px-2 py-1 text-xs">
               Preview
             </TabsTrigger>
-            <TabsTrigger value="markdown" className="px-2 py-1 text-xs">
-              Markdown
-            </TabsTrigger>
-            <TabsTrigger value="json" className="px-2 py-1 text-xs">
-              JSON
-            </TabsTrigger>
-            <TabsTrigger value="receipt" className="px-2 py-1 text-xs">
-              HTML
-            </TabsTrigger>
-            <TabsTrigger value="text" className="px-2 py-1 text-xs">
-              Text
-            </TabsTrigger>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="More formats"
+                  className={cn(
+                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 py-1 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+                    activeFormat !== 'preview' && 'bg-background text-foreground shadow-sm',
+                    activeFormat === 'preview' && 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
+                  )}
+                >
+                  ...
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="start" sideOffset={6}>
+                <DropdownMenuRadioGroup
+                  value={activeFormat}
+                  onValueChange={(v) => setActiveFormat(v as typeof activeFormat)}
+                >
+                  <DropdownMenuRadioItem value="markdown">Markdown</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="json">JSON</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="receipt">HTML</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="text">Text</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </TabsList>
 
           <div className="flex items-center gap-2">
@@ -138,6 +245,23 @@ export const OCRTextPanel = (props: OCRTextPanelProps): JSX.Element => {
                   ) : (
                     <div className="text-xs text-muted-foreground mt-0.5">Esto puede tardar unos segundos</div>
                   )}
+
+                  <div className="mt-2 rounded-md border border-border bg-background/50 px-2 py-1">
+                    <div className="text-[11px] text-muted-foreground">Actividad</div>
+                    <div className="text-xs text-foreground/90 min-h-[18px]">
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={`${aiAgentKey ?? 'generic'}-${aiActivityIndex}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          {aiActivitySteps[aiActivityIndex] ?? 'Procesando…'}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
 
                   {aiNotes && aiNotes.length > 0 && (
                     <div className="mt-2 max-h-28 overflow-auto rounded-md border border-border bg-background/50 px-2 py-1">

@@ -95,7 +95,7 @@ export const ImageUploader = () => {
     setEngineDialogOpen(true);
   }, []);
 
-  const handleEngineChoice = useCallback((engine: OcrEngine) => {
+  const handleEngineChoice = useCallback((engine: Extract<OcrEngine, 'easyocr' | 'vision'>) => {
     if (!pendingFile) return;
     const file = pendingFile;
     setEngineDialogOpen(false);
@@ -176,31 +176,34 @@ export const ImageUploader = () => {
 
   return (
     <div className="space-y-3">
-      <Dialog open={engineDialogOpen} onOpenChange={(open) => {
-        setEngineDialogOpen(open);
-        if (!open) {
-          setPendingFile(null);
-        }
-      }}>
+      <Dialog
+        open={engineDialogOpen}
+        onOpenChange={(open) => {
+          setEngineDialogOpen(open);
+          if (!open) {
+            setPendingFile(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>How do you want to scan this receipt?</DialogTitle>
-            <DialogDescription>
-              Choose the OCR engine to process the image.
-            </DialogDescription>
+            <DialogDescription>Choose the OCR engine to process the image.</DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEngineDialogOpen(false)}>
-              Cancel
+          <DialogFooter className="flex-col sm:flex-row sm:justify-end sm:space-x-2">
+            <Button type="button" onClick={() => handleEngineChoice('vision')}>
+              Google Vision (IA)
             </Button>
             <Button type="button" variant="outline" onClick={() => handleEngineChoice('easyocr')}>
-              EasyOCR
+              EasyOCR (Local)
             </Button>
-            <Button type="button" variant="outline" onClick={() => handleEngineChoice('vision')}>
-              Google Vision
-            </Button>
-            <Button type="button" onClick={() => handleEngineChoice('both')}>
-              Both
+            <Button
+              type="button"
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setEngineDialogOpen(false)}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
