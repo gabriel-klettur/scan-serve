@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Folder, History } from "lucide-react";
+import { CreditCard, Folder, FolderOpen, History, Scan } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ReceiptHistoryTab } from "@/features/receipts/components/ReceiptHistoryTab";
 import { FoldersTab } from "@/features/receipts/components/FoldersTab";
 
@@ -10,14 +11,40 @@ const Receipts = () => {
     <div className="min-h-screen bg-background">
       <header className="relative border-b border-border bg-card/50 backdrop-blur-xl">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Link>
-            <div className="h-6 w-px bg-border" />
-            <h1 className="text-lg font-bold text-foreground">Receipts</h1>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+                <Scan className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground">ReceiptVision</h1>
+                <p className="text-xs text-muted-foreground">AI-Powered OCR</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Button asChild variant="outline" className="hidden sm:inline-flex">
+                <Link to="/">
+                  <Scan className="w-4 h-4" />
+                  Home
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="hidden sm:inline-flex">
+                <Link to="/receipts">
+                  <FolderOpen className="w-4 h-4" />
+                  Receipts
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="hidden sm:inline-flex">
+                <Link to="/pricing">
+                  <CreditCard className="w-4 h-4" />
+                  Pricing
+                </Link>
+              </Button>
+            </div>
           </div>
+
+          <div className="text-lg font-bold text-foreground">Receipts</div>
         </div>
       </header>
 

@@ -16,3 +16,7 @@ class Receipt(BaseModel):
     mimeType: str
     image_url: str
     ocr: Optional[OCRResponse] = None
+    ocrStatus: Optional[str] = None
+    ocrJobId: Optional[str] = None
+    ocrError: Optional[str] = None
+    queuePosition: Optional[int] = None

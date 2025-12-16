@@ -7,6 +7,7 @@ from app.repositories.json_db import JsonDb
 from app.services.google_vision_ocr_service import GoogleVisionOcrConfig, GoogleVisionOcrService
 from app.services.openai_receipt_parser_service import OpenAiReceiptParserConfig, OpenAiReceiptParserService
 from app.services.ocr_service import OcrService
+from app.services.ocr_queue import OcrJobQueue
 from app.services.receipts_service import ReceiptsService
 from app.services.storage_service import StorageService
 from app.services.ticket_html_renderer import TicketHtmlRenderer
@@ -61,6 +62,16 @@ def _receipts_service() -> ReceiptsService:
     return ReceiptsService(db=_db(), ocr_service=_ocr(), vision_ocr_service=_google_vision_ocr())
 
 
+@lru_cache
+def _ocr_queue() -> OcrJobQueue:
+    return OcrJobQueue(
+        db=_db(),
+        ocr_service=_ocr(),
+        vision_ocr_service=_google_vision_ocr(),
+        max_concurrent=settings.ocr_queue_max_concurrent,
+    )
+
+
 def get_storage_service() -> StorageService:
     return _storage()
 
@@ -83,3 +94,7 @@ def get_openai_receipt_parser_service() -> OpenAiReceiptParserService:
 
 def get_receipts_service() -> ReceiptsService:
     return _receipts_service()
+
+
+def get_ocr_queue() -> OcrJobQueue:
+    return _ocr_queue()

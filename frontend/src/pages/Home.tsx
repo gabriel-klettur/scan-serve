@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Scan, FolderOpen } from 'lucide-react';
+import { Scan, FolderOpen, CreditCard } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const Home = () => {
-  const { status, result } = useOCRStore();
+  const { status, result, queueStatus, queuePosition } = useOCRStore();
 
   const [topRowHeight, setTopRowHeight] = useState<number>(560);
   const [isResizing, setIsResizing] = useState(false);
@@ -26,6 +26,24 @@ const Home = () => {
 
   const isProcessing = status === 'uploading' || status === 'processing';
   const hasResult = status === 'success' && result;
+
+  const loaderMessage = (() => {
+    if (status === 'uploading') return 'Uploading image...';
+    if (queueStatus === 'queued') {
+      if (typeof queuePosition === 'number' && queuePosition > 0) {
+        return `Queued for OCR (position ${queuePosition})`;
+      }
+      return 'Queued for OCR...';
+    }
+    if (queueStatus === 'processing') return 'Processing OCR...';
+    return 'Analyzing receipt...';
+  })();
+
+  const loaderSubmessage = (() => {
+    if (queueStatus === 'queued') return 'Waiting for an OCR worker to become available';
+    if (queueStatus === 'processing') return 'This may take a few seconds';
+    return 'This may take a few seconds';
+  })();
 
   const clamp = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v));
 
@@ -67,7 +85,7 @@ const Home = () => {
 
       {/* Header */}
       <header className="relative border-b border-border bg-card/50 backdrop-blur-xl">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-16 flex items-center gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -88,9 +106,21 @@ const Home = () => {
             className="flex items-center gap-4"
           >
             <Button asChild variant="outline" className="hidden sm:inline-flex">
+              <Link to="/">
+                <Scan className="w-4 h-4" />
+                Home
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="hidden sm:inline-flex">
               <Link to="/receipts">
                 <FolderOpen className="w-4 h-4" />
                 Receipts
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="hidden sm:inline-flex">
+              <Link to="/pricing">
+                <CreditCard className="w-4 h-4" />
+                Pricing
               </Link>
             </Button>
           </motion.div>
@@ -126,8 +156,8 @@ const Home = () => {
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
                 <Loader
-                  message={status === 'uploading' ? 'Uploading image...' : 'Analyzing receipt...'}
-                  submessage="This may take a few seconds"
+                  message={loaderMessage}
+                  submessage={loaderSubmessage}
                 />
               </CardContent>
             </Card>

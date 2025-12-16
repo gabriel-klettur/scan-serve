@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.v1.endpoints.ocr import router as ocr_router
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.deps import get_ocr_queue
 from app.core.logging import init_logging
 from app.core.logger import get_logger
 from app.core.middleware import add_request_logging
@@ -39,6 +40,12 @@ add_request_logging(app)
 # Frontend compatibility: the React app posts to /ocr (no version prefix).
 app.include_router(ocr_router)
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+
+@app.on_event("startup")
+def _start_ocr_queue() -> None:
+    # Start background worker threads for queued OCR jobs.
+    get_ocr_queue().start()
 
 
 @app.get("/health")

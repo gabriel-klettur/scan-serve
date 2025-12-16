@@ -13,7 +13,7 @@ import { createReceipt } from '@/features/receipts/db/receiptsRepo';
 import { CameraCapture } from '@/features/receipts/components/CameraCapture';
 
 export const ImageUploader = () => {
-  const { status, originalImage, setStatus, setOriginalImage, setResult, setError, reset } = useOCRStore();
+  const { status, originalImage, setStatus, setOriginalImage, setResult, setError, setQueueInfo, reset } = useOCRStore();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [engineDialogOpen, setEngineDialogOpen] = useState(false);
@@ -56,6 +56,7 @@ export const ImageUploader = () => {
 
   const processImage = useCallback(async (file: File, engine: OcrEngine) => {
     try {
+      setQueueInfo(null, null);
       setStatus('uploading');
       setValidationError(null);
       
@@ -64,7 +65,9 @@ export const ImageUploader = () => {
       
       setStatus('processing');
 
-      const ocrResult = await createReceiptOnServer(file, engine);
+      const ocrResult = await createReceiptOnServer(file, engine, (info) => {
+        setQueueInfo(info.status, info.queuePosition ?? null);
+      });
       setResult(ocrResult);
 
       try {
@@ -86,9 +89,10 @@ export const ImageUploader = () => {
       }
       
     } catch (err) {
+      setQueueInfo(null, null);
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
     }
-  }, [setStatus, setOriginalImage, setResult, setError]);
+  }, [setQueueInfo, setStatus, setOriginalImage, setResult, setError]);
 
   const promptEngineAndProcess = useCallback((file: File) => {
     setPendingFile(file);

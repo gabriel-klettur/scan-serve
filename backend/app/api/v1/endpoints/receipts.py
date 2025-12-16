@@ -4,10 +4,19 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 
-from app.core.deps import get_receipts_service, get_storage_service
+from pydantic import BaseModel
+
+from app.core.deps import get_ocr_queue, get_receipts_service, get_storage_service
 from app.models.receipts import Receipt
 
 router = APIRouter()
+
+
+class ReceiptOcrStatus(BaseModel):
+    receiptId: str
+    status: str
+    queuePosition: Optional[int] = None
+    error: Optional[str] = None
 
 
 @router.get("", response_model=list[Receipt])
@@ -26,6 +35,7 @@ async def create_receipt(
     ocrEngine: str = Form(default="easyocr", pattern="^(easyocr|vision|both)$"),
     storage=Depends(get_storage_service),
     service=Depends(get_receipts_service),
+    ocr_queue=Depends(get_ocr_queue),
 ) -> Receipt:
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image uploads are supported")
@@ -33,17 +43,84 @@ async def create_receipt(
     image_path, rel_url = storage.save_upload(file, subdir="receipts")
 
     try:
-        return service.add_receipt(
+        receipt = service.add_receipt(
             folder_id=folderId,
             original_file_name=file.filename or "receipt",
             mime_type=file.content_type or "application/octet-stream",
             image_url=rel_url,
             ocr_image_path=str(image_path),
-            run_ocr=runOcr,
+            run_ocr=False,
             ocr_engine=ocrEngine,
         )
+
+        if runOcr:
+            job_id = ocr_queue.enqueue(
+                receipt_id=receipt.id,
+                image_url=rel_url,
+                image_path=str(image_path),
+                engine=ocrEngine,
+            )
+            snap = ocr_queue.snapshot_for_job(job_id)
+            receipt = service.update_receipt_ocr_meta(
+                receipt.id,
+                ocr_status=snap.status,
+                ocr_job_id=job_id,
+                ocr_error=None,
+                queue_position=snap.queue_position,
+            )
+
+        return receipt
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/{receipt_id}", response_model=Receipt)
+def get_receipt(
+    receipt_id: str,
+    service=Depends(get_receipts_service),
+    ocr_queue=Depends(get_ocr_queue),
+) -> Receipt:
+    try:
+        receipt = service.get_receipt(receipt_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    snap = ocr_queue.snapshot_for_receipt(receipt_id)
+    # If the receipt isn't finished yet, prefer the queue snapshot for live status/position.
+    if receipt.ocr is None and snap.status != "unknown":
+        receipt.ocrStatus = snap.status
+        receipt.queuePosition = snap.queue_position
+    return receipt
+
+
+@router.get("/{receipt_id}/ocr-status", response_model=ReceiptOcrStatus)
+def get_receipt_ocr_status(
+    receipt_id: str,
+    service=Depends(get_receipts_service),
+    ocr_queue=Depends(get_ocr_queue),
+) -> ReceiptOcrStatus:
+    try:
+        receipt = service.get_receipt(receipt_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    snap = ocr_queue.snapshot_for_receipt(receipt_id)
+    status = receipt.ocrStatus or snap.status
+    queue_pos = snap.queue_position
+
+    if status in {"queued", "processing"}:
+        # Best-effort persistence so list_receipts can show position without extra calls.
+        try:
+            service.update_receipt_ocr_meta(receipt_id, ocr_status=status, queue_position=queue_pos)
+        except KeyError:
+            pass
+
+    return ReceiptOcrStatus(
+        receiptId=receipt_id,
+        status=status or "unknown",
+        queuePosition=queue_pos,
+        error=receipt.ocrError,
+    )
 
 
 @router.patch("/{receipt_id}/folder", response_model=Receipt)

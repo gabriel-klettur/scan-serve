@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     log_json: bool = False
     log_color: bool = True
 
+    ocr_queue_max_concurrent: int = Field(default=1, validation_alias="OCR_QUEUE_MAX_CONCURRENT")
+
     google_vision_api_key: str = Field(default="", validation_alias="GOOGLE_VISION_OCR_API_KEY")
     google_vision_language_hints: list[str] = Field(default_factory=lambda: ["is", "en"], validation_alias="VISION_LANGUAGE_HINTS")
 

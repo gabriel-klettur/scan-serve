@@ -73,6 +73,47 @@ class ReceiptsService:
         receipts.sort(key=lambda r: r.createdAt, reverse=True)
         return receipts
 
+    def get_receipt(self, receipt_id: str) -> Receipt:
+        data = self._db.read()
+        rec = next((r for r in data.get("receipts", []) if r.get("id") == receipt_id), None)
+        if not rec:
+            raise KeyError("Receipt not found")
+        return Receipt(**rec)
+
+    def update_receipt_ocr_meta(
+        self,
+        receipt_id: str,
+        *,
+        ocr_status: Optional[str] = None,
+        ocr_job_id: Optional[str] = None,
+        ocr_error: Optional[str] = None,
+        queue_position: Optional[int] = None,
+    ) -> Receipt:
+        def mutate(data):
+            receipts = data.get("receipts", [])
+            for i, r in enumerate(receipts):
+                if r.get("id") == receipt_id:
+                    updated = {
+                        **r,
+                        "updatedAt": int(time.time() * 1000),
+                    }
+                    if ocr_status is not None:
+                        updated["ocrStatus"] = ocr_status
+                    if ocr_job_id is not None:
+                        updated["ocrJobId"] = ocr_job_id
+                    if ocr_error is not None:
+                        updated["ocrError"] = ocr_error
+                    if queue_position is not None:
+                        updated["queuePosition"] = queue_position
+                    receipts[i] = updated
+                    data["receipts"] = receipts
+                    return data
+            raise KeyError("Receipt not found")
+
+        new_data = self._db.mutate(mutate)
+        rec = next(r for r in new_data.get("receipts", []) if r.get("id") == receipt_id)
+        return Receipt(**rec)
+
     def add_receipt(
         self,
         folder_id: Optional[str],

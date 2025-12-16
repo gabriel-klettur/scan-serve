@@ -12,6 +12,10 @@ interface ServerReceipt {
   mimeType: string;
   image_url: string;
   ocr: OCRResponse | null;
+  ocrStatus?: string | null;
+  ocrJobId?: string | null;
+  ocrError?: string | null;
+  queuePosition?: number | null;
 }
 
 const toAbsoluteUrl = (url: string): string => {
@@ -141,7 +145,13 @@ export const parseReceiptWithAIStream = async (
 
 export type OcrEngine = 'easyocr' | 'vision' | 'both';
 
-export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = 'vision'): Promise<OCRResponse> => {
+const sleep = (ms: number): Promise<void> => new Promise((r) => window.setTimeout(r, ms));
+
+export const createReceiptOnServer = async (
+  file: File,
+  ocrEngine: OcrEngine = 'vision',
+  onQueueUpdate?: (info: { status: string; queuePosition?: number | null }) => void,
+): Promise<OCRResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('runOcr', 'true');
@@ -154,15 +164,51 @@ export const createReceiptOnServer = async (file: File, ocrEngine: OcrEngine = '
   });
 
   const receipt = response.data;
-  if (!receipt.ocr) {
-    throw new Error('OCR was not returned by the backend');
+
+  const normalizeOcr = (ocr: OCRResponse): OCRResponse => ({
+    ...ocr,
+    original_image_url: toAbsoluteUrl(ocr.original_image_url),
+    processed_image_url: toAbsoluteUrl(ocr.processed_image_url),
+  });
+
+  if (receipt.ocr) {
+    return normalizeOcr(receipt.ocr);
   }
 
-  return {
-    ...receipt.ocr,
-    original_image_url: toAbsoluteUrl(receipt.ocr.original_image_url),
-    processed_image_url: toAbsoluteUrl(receipt.ocr.processed_image_url),
-  };
+  const receiptId = receipt.id;
+  if (!receiptId) {
+    throw new Error('Receipt id was not returned by the backend');
+  }
+
+  if (onQueueUpdate) {
+    onQueueUpdate({ status: String(receipt.ocrStatus || 'queued'), queuePosition: receipt.queuePosition });
+  }
+
+  const timeoutMs = 180000;
+  const intervalMs = 900;
+  const start = Date.now();
+
+  while (Date.now() - start < timeoutMs) {
+    const statusRes = await apiClient.get<ServerReceipt>(`/api/v1/receipts/${receiptId}`, {
+      timeout: 20000,
+    });
+    const latest = statusRes.data;
+
+    if (onQueueUpdate) {
+      onQueueUpdate({ status: String(latest.ocrStatus || 'unknown'), queuePosition: latest.queuePosition });
+    }
+
+    if (latest.ocr) {
+      return normalizeOcr(latest.ocr);
+    }
+    if (latest.ocrStatus === 'error') {
+      throw new Error(latest.ocrError || 'OCR failed');
+    }
+
+    await sleep(intervalMs);
+  }
+
+  throw new Error('OCR is taking too long. Please try again.');
 };
 
 // Mock data for demo mode
