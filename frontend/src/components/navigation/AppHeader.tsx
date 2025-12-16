@@ -5,6 +5,7 @@ import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useOCRStore } from '@/store/ocrStore';
+import { ScanResultTabs } from './scan-tabs';
 
 type AppHeaderProps = {
   rightContent?: ReactNode;
@@ -110,7 +111,10 @@ export const AppHeader = ({ rightContent }: AppHeaderProps) => {
           </motion.nav>
         </div>
 
-        <div className="flex items-center justify-end gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-3 shrink-0">
+          {/* Scan Result Tabs */}
+          <ScanResultTabs />
+
           {rightContent}
 
           <Button asChild variant="icon" size="icon" title="Settings" aria-label="Settings">

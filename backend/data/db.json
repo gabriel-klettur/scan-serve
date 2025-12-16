@@ -57436,6 +57436,2643 @@
       "ocrJobId": "aaee00c131044f96841a6a9a6eca127b",
       "ocrError": null,
       "queuePosition": 1
+    },
+    {
+      "id": "688a89acc93c4629aef1a53a513cd955",
+      "folderId": null,
+      "createdAt": 1765897052523,
+      "updatedAt": 1765897053327,
+      "originalFileName": "photo_5906635640932076460_y.jpg",
+      "mimeType": "image/jpeg",
+      "image_url": "/uploads/receipts/94793aa2f41b4031b6c3dca5787adc0c.jpg",
+      "ocr": {
+        "original_image_url": "/uploads/receipts/94793aa2f41b4031b6c3dca5787adc0c.jpg",
+        "processed_image_url": "/uploads/receipts/94793aa2f41b4031b6c3dca5787adc0c.jpg",
+        "text_raw": "KRONAN\nKrónan Borgartúni\nSími 585-7000 kt : 711298-2239\n- vsk : 62065 Kvitt :\n0000021136000031032 Starfs\nBorgartún Dags .: SCO Færsla 31031 29.11.25\n16:00\nLýsing\nUpphæð Odyrt\nbeikon stk\n928 Linuafsláttur F Grisa\n-464 Baby back\n0,968kg @ 2.099 / kg 2.032 F Línuafsláttur\n-1.016 SG grillkjot Alabama\n1,58 kg@2.570 F 4.060\nLinuafsláttur -2.031\nHamborgarar 4 stk me stk 1.775 F\nLinuafsláttur -887\nMinnkum Matarsóun stk 99 F\nSamtals 4.496\nKort -4.496\nVSK % VSK Nettóupphæ Upphæð\n446 4.496 4.050 11\nKassakvittun Syniō - VORUSKIL\n! aftur Velkomin - viðskiptin Þökkum\nwww.kronan.is",
+        "confidence_avg": 90.0,
+        "fields": {
+          "total": 4496.0,
+          "date": "29.11.25",
+          "merchant": "KRONAN"
+        },
+        "boxes": [
+          {
+            "text": "KRONAN",
+            "bbox": [
+              [
+                261.0,
+                52.0
+              ],
+              [
+                686.0,
+                52.0
+              ],
+              [
+                686.0,
+                141.0
+              ],
+              [
+                261.0,
+                141.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Krónan Borgartúni",
+            "bbox": [
+              [
+                321.0,
+                153.0
+              ],
+              [
+                551.0,
+                153.0
+              ],
+              [
+                551.0,
+                204.0
+              ],
+              [
+                321.0,
+                204.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Sími 585-7000 kt : 711298-2239",
+            "bbox": [
+              [
+                251.0,
+                178.0
+              ],
+              [
+                528.0,
+                178.0
+              ],
+              [
+                528.0,
+                245.0
+              ],
+              [
+                251.0,
+                245.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "- vsk : 62065 Kvitt :",
+            "bbox": [
+              [
+                157.0,
+                213.0
+              ],
+              [
+                637.0,
+                213.0
+              ],
+              [
+                637.0,
+                274.0
+              ],
+              [
+                157.0,
+                274.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0000021136000031032 Starfs",
+            "bbox": [
+              [
+                153.0,
+                244.0
+              ],
+              [
+                524.0,
+                244.0
+              ],
+              [
+                524.0,
+                300.0
+              ],
+              [
+                153.0,
+                300.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Borgartún Dags .: SCO Færsla 31031 29.11.25",
+            "bbox": [
+              [
+                149.0,
+                273.0
+              ],
+              [
+                719.0,
+                273.0
+              ],
+              [
+                719.0,
+                336.0
+              ],
+              [
+                149.0,
+                336.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "16:00",
+            "bbox": [
+              [
+                383.0,
+                312.0
+              ],
+              [
+                453.0,
+                312.0
+              ],
+              [
+                453.0,
+                347.0
+              ],
+              [
+                383.0,
+                347.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Lýsing",
+            "bbox": [
+              [
+                141.0,
+                360.0
+              ],
+              [
+                241.0,
+                360.0
+              ],
+              [
+                241.0,
+                398.0
+              ],
+              [
+                141.0,
+                398.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð Odyrt",
+            "bbox": [
+              [
+                135.0,
+                407.0
+              ],
+              [
+                680.0,
+                407.0
+              ],
+              [
+                680.0,
+                454.0
+              ],
+              [
+                135.0,
+                454.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "beikon stk",
+            "bbox": [
+              [
+                229.0,
+                429.0
+              ],
+              [
+                379.0,
+                429.0
+              ],
+              [
+                379.0,
+                477.0
+              ],
+              [
+                229.0,
+                477.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "928 Linuafsláttur F Grisa",
+            "bbox": [
+              [
+                128.0,
+                452.0
+              ],
+              [
+                721.0,
+                452.0
+              ],
+              [
+                721.0,
+                513.0
+              ],
+              [
+                128.0,
+                513.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "-464 Baby back",
+            "bbox": [
+              [
+                225.0,
+                489.0
+              ],
+              [
+                679.0,
+                489.0
+              ],
+              [
+                679.0,
+                530.0
+              ],
+              [
+                225.0,
+                530.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0,968kg @ 2.099 / kg 2.032 F Línuafsláttur",
+            "bbox": [
+              [
+                172.0,
+                514.0
+              ],
+              [
+                721.0,
+                514.0
+              ],
+              [
+                721.0,
+                590.0
+              ],
+              [
+                172.0,
+                590.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "-1.016 SG grillkjot Alabama",
+            "bbox": [
+              [
+                120.0,
+                572.0
+              ],
+              [
+                676.0,
+                572.0
+              ],
+              [
+                676.0,
+                622.0
+              ],
+              [
+                120.0,
+                622.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1,58 kg@2.570 F 4.060",
+            "bbox": [
+              [
+                170.0,
+                607.0
+              ],
+              [
+                712.0,
+                607.0
+              ],
+              [
+                712.0,
+                656.0
+              ],
+              [
+                170.0,
+                656.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Linuafsláttur -2.031",
+            "bbox": [
+              [
+                165.0,
+                636.0
+              ],
+              [
+                672.0,
+                636.0
+              ],
+              [
+                672.0,
+                684.0
+              ],
+              [
+                165.0,
+                684.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Hamborgarar 4 stk me stk 1.775 F",
+            "bbox": [
+              [
+                112.0,
+                665.0
+              ],
+              [
+                713.0,
+                665.0
+              ],
+              [
+                713.0,
+                714.0
+              ],
+              [
+                112.0,
+                714.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Linuafsláttur -887",
+            "bbox": [
+              [
+                159.0,
+                701.0
+              ],
+              [
+                672.0,
+                701.0
+              ],
+              [
+                672.0,
+                743.0
+              ],
+              [
+                159.0,
+                743.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Minnkum Matarsóun stk 99 F",
+            "bbox": [
+              [
+                105.0,
+                729.0
+              ],
+              [
+                711.0,
+                729.0
+              ],
+              [
+                711.0,
+                772.0
+              ],
+              [
+                105.0,
+                772.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Samtals 4.496",
+            "bbox": [
+              [
+                101.0,
+                792.0
+              ],
+              [
+                665.0,
+                792.0
+              ],
+              [
+                665.0,
+                831.0
+              ],
+              [
+                101.0,
+                831.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Kort -4.496",
+            "bbox": [
+              [
+                103.0,
+                825.0
+              ],
+              [
+                667.0,
+                825.0
+              ],
+              [
+                667.0,
+                860.0
+              ],
+              [
+                103.0,
+                860.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "VSK % VSK Nettóupphæ Upphæð",
+            "bbox": [
+              [
+                146.0,
+                895.0
+              ],
+              [
+                708.0,
+                895.0
+              ],
+              [
+                708.0,
+                924.0
+              ],
+              [
+                146.0,
+                924.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "446 4.496 4.050 11",
+            "bbox": [
+              [
+                180.0,
+                926.0
+              ],
+              [
+                711.0,
+                926.0
+              ],
+              [
+                711.0,
+                952.0
+              ],
+              [
+                180.0,
+                952.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Kassakvittun Syniō - VORUSKIL",
+            "bbox": [
+              [
+                176.0,
+                984.0
+              ],
+              [
+                625.0,
+                984.0
+              ],
+              [
+                625.0,
+                1023.0
+              ],
+              [
+                176.0,
+                1023.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "! aftur Velkomin - viðskiptin Þökkum",
+            "bbox": [
+              [
+                133.0,
+                1009.0
+              ],
+              [
+                671.0,
+                1009.0
+              ],
+              [
+                671.0,
+                1055.0
+              ],
+              [
+                133.0,
+                1055.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "www.kronan.is",
+            "bbox": [
+              [
+                301.0,
+                1050.0
+              ],
+              [
+                509.0,
+                1050.0
+              ],
+              [
+                509.0,
+                1086.0
+              ],
+              [
+                301.0,
+                1086.0
+              ]
+            ],
+            "confidence": 90.0
+          }
+        ]
+      },
+      "ocrStatus": "done",
+      "ocrJobId": "d5f769d55acd4dd7b16ff253678d1fb4",
+      "ocrError": null,
+      "queuePosition": 1
+    },
+    {
+      "id": "b9824dfc0a6e4e5ead16366c84aa57b0",
+      "folderId": null,
+      "createdAt": 1765897645879,
+      "updatedAt": 1765897646770,
+      "originalFileName": "photo_5906635640932076468_y.jpg",
+      "mimeType": "image/jpeg",
+      "image_url": "/uploads/receipts/3d4f5d65ab3a432a9babb77f7eaa0b9e.jpg",
+      "ocr": {
+        "original_image_url": "/uploads/receipts/3d4f5d65ab3a432a9babb77f7eaa0b9e.jpg",
+        "processed_image_url": "/uploads/receipts/3d4f5d65ab3a432a9babb77f7eaa0b9e.jpg",
+        "text_raw": "BÓNUS →\nSkipholti Bónus\n527-9000 : SIMI 106034 : VSK\n450199-3389 KT 470710-0390 : KT . EHF VERSLANIR HAGAR\n0000V33F07000344248 : Kvitt Færsla 344248\nSjálfsafgr Starfs 08 : 12115 .: Dags\nUpphæð Lysing\nE 1.998 3 14cz jóla D ilmkerti 398\nkr 398 afsl D / m 4.289 gallað gr 900 konfekt\nLindu\n6.685\nSamtals -6.685\nGreiðslukort\nVisa\n1233\nUpphæð VSK Nettóuppræ VSK % 1.998 387\n1.611 24 E 4.687 464\n4.223 11 D\nEININGAR .................\nVERÐSAMANBURÐ GERIÐ\nviðskiptin Þökkum\nBónus í aftur Velkomir\ngegn skilað einungis fæst Vörum\nkassakvittunar framvísun\nWWW.BONUS.IS\n10000V33F07000344248\nSALA\nFÆRSLUHIRDIR : LANDSBANKINN\n2025-12-12T15 : 08 : 44 + 00 : 00 475526 ****** 1233\n105973 846475\n121508105973 Bonus Skipholti",
+        "confidence_avg": 90.0,
+        "fields": {
+          "total": 6685.0,
+          "date": null,
+          "merchant": "BÓNUS →"
+        },
+        "boxes": [
+          {
+            "text": "BÓNUS →",
+            "bbox": [
+              [
+                102.0,
+                218.0
+              ],
+              [
+                511.0,
+                218.0
+              ],
+              [
+                511.0,
+                317.0
+              ],
+              [
+                102.0,
+                317.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Skipholti Bónus",
+            "bbox": [
+              [
+                217.0,
+                344.0
+              ],
+              [
+                355.0,
+                344.0
+              ],
+              [
+                355.0,
+                379.0
+              ],
+              [
+                217.0,
+                379.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "527-9000 : SIMI 106034 : VSK",
+            "bbox": [
+              [
+                226.0,
+                360.0
+              ],
+              [
+                418.0,
+                360.0
+              ],
+              [
+                418.0,
+                406.0
+              ],
+              [
+                226.0,
+                406.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "450199-3389 KT 470710-0390 : KT . EHF VERSLANIR HAGAR",
+            "bbox": [
+              [
+                120.0,
+                383.0
+              ],
+              [
+                467.0,
+                383.0
+              ],
+              [
+                467.0,
+                433.0
+              ],
+              [
+                120.0,
+                433.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0000V33F07000344248 : Kvitt Færsla 344248",
+            "bbox": [
+              [
+                98.0,
+                434.0
+              ],
+              [
+                490.0,
+                434.0
+              ],
+              [
+                490.0,
+                469.0
+              ],
+              [
+                98.0,
+                469.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Sjálfsafgr Starfs 08 : 12115 .: Dags",
+            "bbox": [
+              [
+                95.0,
+                463.0
+              ],
+              [
+                307.0,
+                463.0
+              ],
+              [
+                307.0,
+                501.0
+              ],
+              [
+                95.0,
+                501.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð Lysing",
+            "bbox": [
+              [
+                97.0,
+                525.0
+              ],
+              [
+                467.0,
+                525.0
+              ],
+              [
+                467.0,
+                554.0
+              ],
+              [
+                97.0,
+                554.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "E 1.998 3 14cz jóla D ilmkerti 398",
+            "bbox": [
+              [
+                98.0,
+                555.0
+              ],
+              [
+                504.0,
+                555.0
+              ],
+              [
+                504.0,
+                591.0
+              ],
+              [
+                98.0,
+                591.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "kr 398 afsl D / m 4.289 gallað gr 900 konfekt",
+            "bbox": [
+              [
+                94.0,
+                581.0
+              ],
+              [
+                507.0,
+                581.0
+              ],
+              [
+                507.0,
+                628.0
+              ],
+              [
+                94.0,
+                628.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Lindu",
+            "bbox": [
+              [
+                93.0,
+                609.0
+              ],
+              [
+                144.0,
+                609.0
+              ],
+              [
+                144.0,
+                632.0
+              ],
+              [
+                93.0,
+                632.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "6.685",
+            "bbox": [
+              [
+                423.0,
+                632.0
+              ],
+              [
+                476.0,
+                632.0
+              ],
+              [
+                476.0,
+                647.0
+              ],
+              [
+                423.0,
+                647.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Samtals -6.685",
+            "bbox": [
+              [
+                98.0,
+                649.0
+              ],
+              [
+                480.0,
+                649.0
+              ],
+              [
+                480.0,
+                669.0
+              ],
+              [
+                98.0,
+                669.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Greiðslukort",
+            "bbox": [
+              [
+                99.0,
+                667.0
+              ],
+              [
+                217.0,
+                667.0
+              ],
+              [
+                217.0,
+                690.0
+              ],
+              [
+                99.0,
+                690.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Visa",
+            "bbox": [
+              [
+                122.0,
+                690.0
+              ],
+              [
+                162.0,
+                690.0
+              ],
+              [
+                162.0,
+                707.0
+              ],
+              [
+                122.0,
+                707.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1233",
+            "bbox": [
+              [
+                125.0,
+                710.0
+              ],
+              [
+                162.0,
+                710.0
+              ],
+              [
+                162.0,
+                726.0
+              ],
+              [
+                125.0,
+                726.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð VSK Nettóuppræ VSK % 1.998 387",
+            "bbox": [
+              [
+                137.0,
+                735.0
+              ],
+              [
+                515.0,
+                735.0
+              ],
+              [
+                515.0,
+                775.0
+              ],
+              [
+                137.0,
+                775.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1.611 24 E 4.687 464",
+            "bbox": [
+              [
+                111.0,
+                765.0
+              ],
+              [
+                515.0,
+                765.0
+              ],
+              [
+                515.0,
+                796.0
+              ],
+              [
+                111.0,
+                796.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "4.223 11 D",
+            "bbox": [
+              [
+                113.0,
+                786.0
+              ],
+              [
+                283.0,
+                786.0
+              ],
+              [
+                283.0,
+                808.0
+              ],
+              [
+                113.0,
+                808.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "EININGAR .................",
+            "bbox": [
+              [
+                115.0,
+                831.0
+              ],
+              [
+                357.0,
+                831.0
+              ],
+              [
+                357.0,
+                852.0
+              ],
+              [
+                115.0,
+                852.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "VERÐSAMANBURÐ GERIÐ",
+            "bbox": [
+              [
+                204.0,
+                844.0
+              ],
+              [
+                404.0,
+                844.0
+              ],
+              [
+                404.0,
+                869.0
+              ],
+              [
+                204.0,
+                869.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "viðskiptin Þökkum",
+            "bbox": [
+              [
+                216.0,
+                866.0
+              ],
+              [
+                393.0,
+                866.0
+              ],
+              [
+                393.0,
+                890.0
+              ],
+              [
+                216.0,
+                890.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Bónus í aftur Velkomir",
+            "bbox": [
+              [
+                196.0,
+                885.0
+              ],
+              [
+                427.0,
+                885.0
+              ],
+              [
+                427.0,
+                911.0
+              ],
+              [
+                196.0,
+                911.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "gegn skilað einungis fæst Vörum",
+            "bbox": [
+              [
+                149.0,
+                905.0
+              ],
+              [
+                470.0,
+                905.0
+              ],
+              [
+                470.0,
+                934.0
+              ],
+              [
+                149.0,
+                934.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "kassakvittunar framvísun",
+            "bbox": [
+              [
+                192.0,
+                930.0
+              ],
+              [
+                438.0,
+                930.0
+              ],
+              [
+                438.0,
+                952.0
+              ],
+              [
+                192.0,
+                952.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "WWW.BONUS.IS",
+            "bbox": [
+              [
+                252.0,
+                954.0
+              ],
+              [
+                376.0,
+                954.0
+              ],
+              [
+                376.0,
+                971.0
+              ],
+              [
+                252.0,
+                971.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "10000V33F07000344248",
+            "bbox": [
+              [
+                243.0,
+                1074.0
+              ],
+              [
+                450.0,
+                1074.0
+              ],
+              [
+                450.0,
+                1098.0
+              ],
+              [
+                243.0,
+                1098.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "SALA",
+            "bbox": [
+              [
+                130.0,
+                1131.0
+              ],
+              [
+                169.0,
+                1131.0
+              ],
+              [
+                169.0,
+                1147.0
+              ],
+              [
+                130.0,
+                1147.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "FÆRSLUHIRDIR : LANDSBANKINN",
+            "bbox": [
+              [
+                129.0,
+                1147.0
+              ],
+              [
+                390.0,
+                1147.0
+              ],
+              [
+                390.0,
+                1187.0
+              ],
+              [
+                129.0,
+                1187.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "2025-12-12T15 : 08 : 44 + 00 : 00 475526 ****** 1233",
+            "bbox": [
+              [
+                128.0,
+                1168.0
+              ],
+              [
+                381.0,
+                1168.0
+              ],
+              [
+                381.0,
+                1220.0
+              ],
+              [
+                128.0,
+                1220.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "105973 846475",
+            "bbox": [
+              [
+                131.0,
+                1209.0
+              ],
+              [
+                263.0,
+                1209.0
+              ],
+              [
+                263.0,
+                1242.0
+              ],
+              [
+                131.0,
+                1242.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "121508105973 Bonus Skipholti",
+            "bbox": [
+              [
+                131.0,
+                1221.0
+              ],
+              [
+                393.0,
+                1221.0
+              ],
+              [
+                393.0,
+                1260.0
+              ],
+              [
+                131.0,
+                1260.0
+              ]
+            ],
+            "confidence": 90.0
+          }
+        ]
+      },
+      "ocrStatus": "done",
+      "ocrJobId": "cad8a118df954c448f721902a4424d70",
+      "ocrError": null,
+      "queuePosition": 1
+    },
+    {
+      "id": "d2c5ca7ddd874794815ded3a6010f1d4",
+      "folderId": null,
+      "createdAt": 1765897665858,
+      "updatedAt": 1765897666698,
+      "originalFileName": "photo_5906635640932076460_y.jpg",
+      "mimeType": "image/jpeg",
+      "image_url": "/uploads/receipts/87ba2f432ded4b26b849068100275444.jpg",
+      "ocr": {
+        "original_image_url": "/uploads/receipts/87ba2f432ded4b26b849068100275444.jpg",
+        "processed_image_url": "/uploads/receipts/87ba2f432ded4b26b849068100275444.jpg",
+        "text_raw": "KRONAN\nKrónan Borgartúni\nSími 585-7000 kt : 711298-2239\n- vsk : 62065 Kvitt :\n0000021136000031032 Starfs\nBorgartún Dags .: SCO Færsla 31031 29.11.25\n16:00\nLýsing\nUpphæð Odyrt\nbeikon stk\n928 Linuafsláttur F Grisa\n-464 Baby back\n0,968kg @ 2.099 / kg 2.032 F Línuafsláttur\n-1.016 SG grillkjot Alabama\n1,58 kg@2.570 F 4.060\nLinuafsláttur -2.031\nHamborgarar 4 stk me stk 1.775 F\nLinuafsláttur -887\nMinnkum Matarsóun stk 99 F\nSamtals 4.496\nKort -4.496\nVSK % VSK Nettóupphæ Upphæð\n446 4.496 4.050 11\nKassakvittun Syniō - VORUSKIL\n! aftur Velkomin - viðskiptin Þökkum\nwww.kronan.is",
+        "confidence_avg": 90.0,
+        "fields": {
+          "total": 4496.0,
+          "date": "29.11.25",
+          "merchant": "KRONAN"
+        },
+        "boxes": [
+          {
+            "text": "KRONAN",
+            "bbox": [
+              [
+                261.0,
+                52.0
+              ],
+              [
+                686.0,
+                52.0
+              ],
+              [
+                686.0,
+                141.0
+              ],
+              [
+                261.0,
+                141.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Krónan Borgartúni",
+            "bbox": [
+              [
+                321.0,
+                153.0
+              ],
+              [
+                551.0,
+                153.0
+              ],
+              [
+                551.0,
+                204.0
+              ],
+              [
+                321.0,
+                204.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Sími 585-7000 kt : 711298-2239",
+            "bbox": [
+              [
+                251.0,
+                178.0
+              ],
+              [
+                528.0,
+                178.0
+              ],
+              [
+                528.0,
+                245.0
+              ],
+              [
+                251.0,
+                245.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "- vsk : 62065 Kvitt :",
+            "bbox": [
+              [
+                157.0,
+                213.0
+              ],
+              [
+                637.0,
+                213.0
+              ],
+              [
+                637.0,
+                274.0
+              ],
+              [
+                157.0,
+                274.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0000021136000031032 Starfs",
+            "bbox": [
+              [
+                153.0,
+                244.0
+              ],
+              [
+                524.0,
+                244.0
+              ],
+              [
+                524.0,
+                300.0
+              ],
+              [
+                153.0,
+                300.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Borgartún Dags .: SCO Færsla 31031 29.11.25",
+            "bbox": [
+              [
+                149.0,
+                273.0
+              ],
+              [
+                719.0,
+                273.0
+              ],
+              [
+                719.0,
+                336.0
+              ],
+              [
+                149.0,
+                336.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "16:00",
+            "bbox": [
+              [
+                383.0,
+                312.0
+              ],
+              [
+                453.0,
+                312.0
+              ],
+              [
+                453.0,
+                347.0
+              ],
+              [
+                383.0,
+                347.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Lýsing",
+            "bbox": [
+              [
+                141.0,
+                360.0
+              ],
+              [
+                241.0,
+                360.0
+              ],
+              [
+                241.0,
+                398.0
+              ],
+              [
+                141.0,
+                398.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð Odyrt",
+            "bbox": [
+              [
+                135.0,
+                407.0
+              ],
+              [
+                680.0,
+                407.0
+              ],
+              [
+                680.0,
+                454.0
+              ],
+              [
+                135.0,
+                454.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "beikon stk",
+            "bbox": [
+              [
+                229.0,
+                429.0
+              ],
+              [
+                379.0,
+                429.0
+              ],
+              [
+                379.0,
+                477.0
+              ],
+              [
+                229.0,
+                477.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "928 Linuafsláttur F Grisa",
+            "bbox": [
+              [
+                128.0,
+                452.0
+              ],
+              [
+                721.0,
+                452.0
+              ],
+              [
+                721.0,
+                513.0
+              ],
+              [
+                128.0,
+                513.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "-464 Baby back",
+            "bbox": [
+              [
+                225.0,
+                489.0
+              ],
+              [
+                679.0,
+                489.0
+              ],
+              [
+                679.0,
+                530.0
+              ],
+              [
+                225.0,
+                530.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0,968kg @ 2.099 / kg 2.032 F Línuafsláttur",
+            "bbox": [
+              [
+                172.0,
+                514.0
+              ],
+              [
+                721.0,
+                514.0
+              ],
+              [
+                721.0,
+                590.0
+              ],
+              [
+                172.0,
+                590.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "-1.016 SG grillkjot Alabama",
+            "bbox": [
+              [
+                120.0,
+                572.0
+              ],
+              [
+                676.0,
+                572.0
+              ],
+              [
+                676.0,
+                622.0
+              ],
+              [
+                120.0,
+                622.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1,58 kg@2.570 F 4.060",
+            "bbox": [
+              [
+                170.0,
+                607.0
+              ],
+              [
+                712.0,
+                607.0
+              ],
+              [
+                712.0,
+                656.0
+              ],
+              [
+                170.0,
+                656.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Linuafsláttur -2.031",
+            "bbox": [
+              [
+                165.0,
+                636.0
+              ],
+              [
+                672.0,
+                636.0
+              ],
+              [
+                672.0,
+                684.0
+              ],
+              [
+                165.0,
+                684.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Hamborgarar 4 stk me stk 1.775 F",
+            "bbox": [
+              [
+                112.0,
+                665.0
+              ],
+              [
+                713.0,
+                665.0
+              ],
+              [
+                713.0,
+                714.0
+              ],
+              [
+                112.0,
+                714.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Linuafsláttur -887",
+            "bbox": [
+              [
+                159.0,
+                701.0
+              ],
+              [
+                672.0,
+                701.0
+              ],
+              [
+                672.0,
+                743.0
+              ],
+              [
+                159.0,
+                743.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Minnkum Matarsóun stk 99 F",
+            "bbox": [
+              [
+                105.0,
+                729.0
+              ],
+              [
+                711.0,
+                729.0
+              ],
+              [
+                711.0,
+                772.0
+              ],
+              [
+                105.0,
+                772.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Samtals 4.496",
+            "bbox": [
+              [
+                101.0,
+                792.0
+              ],
+              [
+                665.0,
+                792.0
+              ],
+              [
+                665.0,
+                831.0
+              ],
+              [
+                101.0,
+                831.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Kort -4.496",
+            "bbox": [
+              [
+                103.0,
+                825.0
+              ],
+              [
+                667.0,
+                825.0
+              ],
+              [
+                667.0,
+                860.0
+              ],
+              [
+                103.0,
+                860.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "VSK % VSK Nettóupphæ Upphæð",
+            "bbox": [
+              [
+                146.0,
+                895.0
+              ],
+              [
+                708.0,
+                895.0
+              ],
+              [
+                708.0,
+                924.0
+              ],
+              [
+                146.0,
+                924.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "446 4.496 4.050 11",
+            "bbox": [
+              [
+                180.0,
+                926.0
+              ],
+              [
+                711.0,
+                926.0
+              ],
+              [
+                711.0,
+                952.0
+              ],
+              [
+                180.0,
+                952.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Kassakvittun Syniō - VORUSKIL",
+            "bbox": [
+              [
+                176.0,
+                984.0
+              ],
+              [
+                625.0,
+                984.0
+              ],
+              [
+                625.0,
+                1023.0
+              ],
+              [
+                176.0,
+                1023.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "! aftur Velkomin - viðskiptin Þökkum",
+            "bbox": [
+              [
+                133.0,
+                1009.0
+              ],
+              [
+                671.0,
+                1009.0
+              ],
+              [
+                671.0,
+                1055.0
+              ],
+              [
+                133.0,
+                1055.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "www.kronan.is",
+            "bbox": [
+              [
+                301.0,
+                1050.0
+              ],
+              [
+                509.0,
+                1050.0
+              ],
+              [
+                509.0,
+                1086.0
+              ],
+              [
+                301.0,
+                1086.0
+              ]
+            ],
+            "confidence": 90.0
+          }
+        ]
+      },
+      "ocrStatus": "done",
+      "ocrJobId": "c89a8168f7ba45fd8ffd225680a618b8",
+      "ocrError": null,
+      "queuePosition": 1
+    },
+    {
+      "id": "3558026f86e94c89beeecdd469c4d1d1",
+      "folderId": null,
+      "createdAt": 1765897681078,
+      "updatedAt": 1765897682322,
+      "originalFileName": "photo_5906635640932076468_y.jpg",
+      "mimeType": "image/jpeg",
+      "image_url": "/uploads/receipts/3808153b4cb34b7a90ac25b70404f1cf.jpg",
+      "ocr": {
+        "original_image_url": "/uploads/receipts/3808153b4cb34b7a90ac25b70404f1cf.jpg",
+        "processed_image_url": "/uploads/receipts/3808153b4cb34b7a90ac25b70404f1cf.jpg",
+        "text_raw": "BÓNUS →\nSkipholti Bónus\n527-9000 : SIMI 106034 : VSK\n450199-3389 KT 470710-0390 : KT . EHF VERSLANIR HAGAR\n0000V33F07000344248 : Kvitt Færsla 344248\nSjálfsafgr Starfs 08 : 12115 .: Dags\nUpphæð Lysing\nE 1.998 3 14cz jóla D ilmkerti 398\nkr 398 afsl D / m 4.289 gallað gr 900 konfekt\nLindu\n6.685\nSamtals -6.685\nGreiðslukort\nVisa\n1233\nUpphæð VSK Nettóuppræ VSK % 1.998 387\n1.611 24 E 4.687 464\n4.223 11 D\nEININGAR .................\nVERÐSAMANBURÐ GERIÐ\nviðskiptin Þökkum\nBónus í aftur Velkomir\ngegn skilað einungis fæst Vörum\nkassakvittunar framvísun\nWWW.BONUS.IS\n10000V33F07000344248\nSALA\nFÆRSLUHIRDIR : LANDSBANKINN\n2025-12-12T15 : 08 : 44 + 00 : 00 475526 ****** 1233\n105973 846475\n121508105973 Bonus Skipholti",
+        "confidence_avg": 90.0,
+        "fields": {
+          "total": 6685.0,
+          "date": null,
+          "merchant": "BÓNUS →"
+        },
+        "boxes": [
+          {
+            "text": "BÓNUS →",
+            "bbox": [
+              [
+                102.0,
+                218.0
+              ],
+              [
+                511.0,
+                218.0
+              ],
+              [
+                511.0,
+                317.0
+              ],
+              [
+                102.0,
+                317.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Skipholti Bónus",
+            "bbox": [
+              [
+                217.0,
+                344.0
+              ],
+              [
+                355.0,
+                344.0
+              ],
+              [
+                355.0,
+                379.0
+              ],
+              [
+                217.0,
+                379.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "527-9000 : SIMI 106034 : VSK",
+            "bbox": [
+              [
+                226.0,
+                360.0
+              ],
+              [
+                418.0,
+                360.0
+              ],
+              [
+                418.0,
+                406.0
+              ],
+              [
+                226.0,
+                406.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "450199-3389 KT 470710-0390 : KT . EHF VERSLANIR HAGAR",
+            "bbox": [
+              [
+                120.0,
+                383.0
+              ],
+              [
+                467.0,
+                383.0
+              ],
+              [
+                467.0,
+                433.0
+              ],
+              [
+                120.0,
+                433.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "0000V33F07000344248 : Kvitt Færsla 344248",
+            "bbox": [
+              [
+                98.0,
+                434.0
+              ],
+              [
+                490.0,
+                434.0
+              ],
+              [
+                490.0,
+                469.0
+              ],
+              [
+                98.0,
+                469.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Sjálfsafgr Starfs 08 : 12115 .: Dags",
+            "bbox": [
+              [
+                95.0,
+                463.0
+              ],
+              [
+                307.0,
+                463.0
+              ],
+              [
+                307.0,
+                501.0
+              ],
+              [
+                95.0,
+                501.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð Lysing",
+            "bbox": [
+              [
+                97.0,
+                525.0
+              ],
+              [
+                467.0,
+                525.0
+              ],
+              [
+                467.0,
+                554.0
+              ],
+              [
+                97.0,
+                554.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "E 1.998 3 14cz jóla D ilmkerti 398",
+            "bbox": [
+              [
+                98.0,
+                555.0
+              ],
+              [
+                504.0,
+                555.0
+              ],
+              [
+                504.0,
+                591.0
+              ],
+              [
+                98.0,
+                591.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "kr 398 afsl D / m 4.289 gallað gr 900 konfekt",
+            "bbox": [
+              [
+                94.0,
+                581.0
+              ],
+              [
+                507.0,
+                581.0
+              ],
+              [
+                507.0,
+                628.0
+              ],
+              [
+                94.0,
+                628.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Lindu",
+            "bbox": [
+              [
+                93.0,
+                609.0
+              ],
+              [
+                144.0,
+                609.0
+              ],
+              [
+                144.0,
+                632.0
+              ],
+              [
+                93.0,
+                632.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "6.685",
+            "bbox": [
+              [
+                423.0,
+                632.0
+              ],
+              [
+                476.0,
+                632.0
+              ],
+              [
+                476.0,
+                647.0
+              ],
+              [
+                423.0,
+                647.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Samtals -6.685",
+            "bbox": [
+              [
+                98.0,
+                649.0
+              ],
+              [
+                480.0,
+                649.0
+              ],
+              [
+                480.0,
+                669.0
+              ],
+              [
+                98.0,
+                669.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Greiðslukort",
+            "bbox": [
+              [
+                99.0,
+                667.0
+              ],
+              [
+                217.0,
+                667.0
+              ],
+              [
+                217.0,
+                690.0
+              ],
+              [
+                99.0,
+                690.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Visa",
+            "bbox": [
+              [
+                122.0,
+                690.0
+              ],
+              [
+                162.0,
+                690.0
+              ],
+              [
+                162.0,
+                707.0
+              ],
+              [
+                122.0,
+                707.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1233",
+            "bbox": [
+              [
+                125.0,
+                710.0
+              ],
+              [
+                162.0,
+                710.0
+              ],
+              [
+                162.0,
+                726.0
+              ],
+              [
+                125.0,
+                726.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Upphæð VSK Nettóuppræ VSK % 1.998 387",
+            "bbox": [
+              [
+                137.0,
+                735.0
+              ],
+              [
+                515.0,
+                735.0
+              ],
+              [
+                515.0,
+                775.0
+              ],
+              [
+                137.0,
+                775.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "1.611 24 E 4.687 464",
+            "bbox": [
+              [
+                111.0,
+                765.0
+              ],
+              [
+                515.0,
+                765.0
+              ],
+              [
+                515.0,
+                796.0
+              ],
+              [
+                111.0,
+                796.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "4.223 11 D",
+            "bbox": [
+              [
+                113.0,
+                786.0
+              ],
+              [
+                283.0,
+                786.0
+              ],
+              [
+                283.0,
+                808.0
+              ],
+              [
+                113.0,
+                808.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "EININGAR .................",
+            "bbox": [
+              [
+                115.0,
+                831.0
+              ],
+              [
+                357.0,
+                831.0
+              ],
+              [
+                357.0,
+                852.0
+              ],
+              [
+                115.0,
+                852.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "VERÐSAMANBURÐ GERIÐ",
+            "bbox": [
+              [
+                204.0,
+                844.0
+              ],
+              [
+                404.0,
+                844.0
+              ],
+              [
+                404.0,
+                869.0
+              ],
+              [
+                204.0,
+                869.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "viðskiptin Þökkum",
+            "bbox": [
+              [
+                216.0,
+                866.0
+              ],
+              [
+                393.0,
+                866.0
+              ],
+              [
+                393.0,
+                890.0
+              ],
+              [
+                216.0,
+                890.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "Bónus í aftur Velkomir",
+            "bbox": [
+              [
+                196.0,
+                885.0
+              ],
+              [
+                427.0,
+                885.0
+              ],
+              [
+                427.0,
+                911.0
+              ],
+              [
+                196.0,
+                911.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "gegn skilað einungis fæst Vörum",
+            "bbox": [
+              [
+                149.0,
+                905.0
+              ],
+              [
+                470.0,
+                905.0
+              ],
+              [
+                470.0,
+                934.0
+              ],
+              [
+                149.0,
+                934.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "kassakvittunar framvísun",
+            "bbox": [
+              [
+                192.0,
+                930.0
+              ],
+              [
+                438.0,
+                930.0
+              ],
+              [
+                438.0,
+                952.0
+              ],
+              [
+                192.0,
+                952.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "WWW.BONUS.IS",
+            "bbox": [
+              [
+                252.0,
+                954.0
+              ],
+              [
+                376.0,
+                954.0
+              ],
+              [
+                376.0,
+                971.0
+              ],
+              [
+                252.0,
+                971.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "10000V33F07000344248",
+            "bbox": [
+              [
+                243.0,
+                1074.0
+              ],
+              [
+                450.0,
+                1074.0
+              ],
+              [
+                450.0,
+                1098.0
+              ],
+              [
+                243.0,
+                1098.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "SALA",
+            "bbox": [
+              [
+                130.0,
+                1131.0
+              ],
+              [
+                169.0,
+                1131.0
+              ],
+              [
+                169.0,
+                1147.0
+              ],
+              [
+                130.0,
+                1147.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "FÆRSLUHIRDIR : LANDSBANKINN",
+            "bbox": [
+              [
+                129.0,
+                1147.0
+              ],
+              [
+                390.0,
+                1147.0
+              ],
+              [
+                390.0,
+                1187.0
+              ],
+              [
+                129.0,
+                1187.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "2025-12-12T15 : 08 : 44 + 00 : 00 475526 ****** 1233",
+            "bbox": [
+              [
+                128.0,
+                1168.0
+              ],
+              [
+                381.0,
+                1168.0
+              ],
+              [
+                381.0,
+                1220.0
+              ],
+              [
+                128.0,
+                1220.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "105973 846475",
+            "bbox": [
+              [
+                131.0,
+                1209.0
+              ],
+              [
+                263.0,
+                1209.0
+              ],
+              [
+                263.0,
+                1242.0
+              ],
+              [
+                131.0,
+                1242.0
+              ]
+            ],
+            "confidence": 90.0
+          },
+          {
+            "text": "121508105973 Bonus Skipholti",
+            "bbox": [
+              [
+                131.0,
+                1221.0
+              ],
+              [
+                393.0,
+                1221.0
+              ],
+              [
+                393.0,
+                1260.0
+              ],
+              [
+                131.0,
+                1260.0
+              ]
+            ],
+            "confidence": 90.0
+          }
+        ]
+      },
+      "ocrStatus": "done",
+      "ocrJobId": "77135ab0e8c0466788097d99dfd0c8ef",
+      "ocrError": null,
+      "queuePosition": 1
+    },
+    {
+      "id": "e41d6ce563ad4d6884cf6682976d24ce",
+      "folderId": null,
+      "createdAt": 1765897712736,
+      "updatedAt": 1765897713676,
+      "originalFileName": "chat_edit_image_20251209_140723.png",
+      "mimeType": "image/png",
+      "image_url": "/uploads/receipts/972ab03fd5cd48828dafc9a44242db2c.png",
+      "ocr": {
+        "original_image_url": "/uploads/receipts/972ab03fd5cd48828dafc9a44242db2c.png",
+        "processed_image_url": "/uploads/receipts/972ab03fd5cd48828dafc9a44242db2c.png",
+        "text_raw": "",
+        "confidence_avg": 0.0,
+        "fields": {
+          "total": null,
+          "date": null,
+          "merchant": null
+        },
+        "boxes": []
+      },
+      "ocrStatus": "done",
+      "ocrJobId": "5c36975c29de4af987b141d355284ed0",
+      "ocrError": null,
+      "queuePosition": 1
     }
   ],
   "aiRuns": [

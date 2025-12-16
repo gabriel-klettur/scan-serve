@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Image, X, AlertCircle, Camera, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
+import { useScanResultsStore } from '@/store/scanResultsStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
 import { createReceiptOnServer, type OcrEngine } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
@@ -15,11 +16,13 @@ import { CameraCapture } from '@/features/receipts/components/CameraCapture';
 
 export const ImageUploader = () => {
   const { status, result, originalImage, setStatus, setOriginalImage, setResult, setError, setQueueInfo, reset } = useOCRStore();
+  const { addTab } = useScanResultsStore();
   const navigate = useNavigate();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [engineDialogOpen, setEngineDialogOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingFileName, setPendingFileName] = useState<string>('');
   const captureInputRef = useRef<HTMLInputElement | null>(null);
 
   const isLikelyMobile = (() => {
@@ -56,7 +59,7 @@ export const ImageUploader = () => {
     captureInputRef.current?.click();
   };
 
-  const processImage = useCallback(async (file: File, engine: OcrEngine) => {
+  const processImage = useCallback(async (file: File, engine: OcrEngine, fileName: string) => {
     try {
       setQueueInfo(null, null);
       setStatus('uploading');
@@ -71,6 +74,17 @@ export const ImageUploader = () => {
         setQueueInfo(info.status, info.queuePosition ?? null);
       });
       setResult(ocrResult);
+
+      // Add tab to the scan results tabs in the header
+      addTab({
+        fileName: fileName || file.name,
+        thumbnailUrl: dataUrl,
+        originalImageUrl: dataUrl,
+        ocrResult,
+        aiResult: null,
+        aiStageResults: {},
+        folder: undefined,
+      });
 
       try {
         await createReceipt({
@@ -93,20 +107,23 @@ export const ImageUploader = () => {
       setQueueInfo(null, null);
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
     }
-  }, [setQueueInfo, setStatus, setOriginalImage, setResult, setError]);
+  }, [setQueueInfo, setStatus, setOriginalImage, setResult, setError, addTab]);
 
   const promptEngineAndProcess = useCallback((file: File) => {
     setPendingFile(file);
+    setPendingFileName(file.name);
     setEngineDialogOpen(true);
   }, []);
 
   const handleEngineChoice = useCallback((engine: Extract<OcrEngine, 'easyocr' | 'vision'>) => {
     if (!pendingFile) return;
     const file = pendingFile;
+    const fileName = pendingFileName;
     setEngineDialogOpen(false);
     setPendingFile(null);
-    processImage(file, engine);
-  }, [pendingFile, processImage]);
+    setPendingFileName('');
+    processImage(file, engine, fileName);
+  }, [pendingFile, pendingFileName, processImage]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
