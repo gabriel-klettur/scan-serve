@@ -50,6 +50,13 @@ export const OCRText = () => {
     setAiStatus,
     setAiResult,
     setAiError,
+    aiStageResults,
+    aiSelectedStage,
+    mergeAiStageResult,
+    resetAiStages,
+    setAiSelectedStage,
+    pulseAiStage,
+    setAiActiveStageKey,
     hoveredBoxIndex,
     selectedBoxIndex,
   } = useOCRStore();
@@ -65,10 +72,12 @@ export const OCRText = () => {
   if (!result) return null;
 
   const hasBoxes = Boolean(result.boxes?.length);
-  const effectiveFields = aiResult?.fields || result.fields;
-  const textView = aiResult?.text_clean || (hasBoxes ? formatBoxesAsSectionedText(result.boxes) : result.text_raw);
+  const selectedStageResult = aiSelectedStage ? aiStageResults[aiSelectedStage] : null;
+  const effectiveAi = selectedStageResult || aiResult;
+  const effectiveFields = effectiveAi?.fields || result.fields;
+  const textView = effectiveAi?.text_clean || (hasBoxes ? formatBoxesAsSectionedText(result.boxes) : result.text_raw);
   const markdownView =
-    aiResult?.markdown ||
+    effectiveAi?.markdown ||
     (hasBoxes ? formatBoxesAsSectionedMarkdown(result.boxes) : ['## Extracted Receipt', '```text', result.text_raw, '```'].join('\n'));
   const parsedDocument = useMemo(() => parseReceiptMarkdown(markdownView), [markdownView]);
 
@@ -144,15 +153,33 @@ export const OCRText = () => {
     setAiStatus('processing');
     setAiAgentLabel(null);
     setAiNotes([]);
+    resetAiStages();
+    setAiActiveStageKey(null);
     try {
       const onEvent = (evt: AiParseStreamEvent) => {
         if (evt.type === 'stage_start') {
           setAiAgentLabel(evt.agent || evt.stage);
+          const key = (evt.stage || evt.agent || '').trim().toLowerCase();
+          if (key) setAiActiveStageKey(key);
+        }
+        if (evt.type === 'stage_result') {
+          const stage = (evt.stage || '').trim();
+          if (!stage) return;
+          mergeAiStageResult(stage, evt.data);
+          pulseAiStage(stage);
+          const st = useOCRStore.getState();
+          if (st.aiAutoFollowStage) {
+            setAiSelectedStage(stage);
+          } else if (!st.aiSelectedStage) {
+            setAiSelectedStage(stage);
+          }
         }
         if (evt.type === 'handoff') {
           const to = evt.to_agent || evt.to_stage;
           const from = evt.from_agent || evt.from_stage;
           setAiAgentLabel(`Transfiriendo a ${to}…`);
+          const key = (to || '').trim().toLowerCase();
+          if (key) setAiActiveStageKey(key);
           setAiNotes((prev) => {
             const next = prev.length >= 60 ? prev.slice(prev.length - 59) : prev;
             return [...next, `${from} → ${to}`];
@@ -172,6 +199,7 @@ export const OCRText = () => {
       try {
         parsed = await parseReceiptWithAIStream(
           {
+            receiptId: result.receiptId,
             text_raw: result.text_raw,
             fields: result.fields,
             boxes: result.boxes,
@@ -180,12 +208,23 @@ export const OCRText = () => {
         );
       } catch {
         parsed = await parseReceiptWithAI({
+          receiptId: result.receiptId,
           text_raw: result.text_raw,
           fields: result.fields,
           boxes: result.boxes,
         });
       }
       setAiResult(parsed);
+
+      // Robustness: if streaming fails mid-run and we fall back to non-stream,
+      // we might miss the final stage_result (stylist). Since the pipeline's
+      // last stage is stylist, reuse the final result as a stylist snapshot so
+      // the user can still inspect/select it.
+      const stAfter = useOCRStore.getState();
+      if (parsed && !stAfter.aiStageResults?.stylist) {
+        mergeAiStageResult('stylist', parsed);
+      }
+
       toast.success('Mejorado con IA');
     } catch (e: any) {
       setAiResult(null);
@@ -209,6 +248,7 @@ export const OCRText = () => {
         window.clearInterval(aiTimerRef.current);
         aiTimerRef.current = null;
       }
+      setAiActiveStageKey(null);
     }
   };
 
@@ -263,6 +303,12 @@ export const OCRText = () => {
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   }, [aiLastDurationMs]);
 
+  useEffect(() => {
+    if (isAiProcessing) return;
+    if (!aiResult) return;
+    setAiSelectedStage(null);
+  }, [aiResult, isAiProcessing]);
+
   const textToCopy =
     activeFormat === 'receipt'
       ? receiptHtml
@@ -271,6 +317,15 @@ export const OCRText = () => {
         : activeFormat === 'json'
           ? jsonView
           : textView;
+
+  const handleEmail = () => {
+    const subjectParts = [effectiveFields?.merchant, effectiveFields?.date].filter(Boolean);
+    const subject = subjectParts.length ? `Scan Serve - ${subjectParts.join(' - ')}` : 'Scan Serve - OCR Result';
+    const body = textToCopy;
+
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+  };
 
   const handleCopy = async () => {
     const success = await copyToClipboard(textToCopy);
@@ -290,6 +345,7 @@ export const OCRText = () => {
       isAiProcessing={isAiProcessing}
       onImproveWithAI={handleImproveWithAI}
       onCopy={handleCopy}
+      onEmail={handleEmail}
       copied={copied}
       aiError={aiError}
       aiHasResult={Boolean(aiResult)}

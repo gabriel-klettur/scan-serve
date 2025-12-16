@@ -43,6 +43,7 @@ export const uploadImageForOCR = async (file: File): Promise<OCRResponse> => {
 };
 
 export const parseReceiptWithAI = async (payload: {
+  receiptId?: string;
   text_raw: string;
   fields?: OCRResponse['fields'];
   boxes?: OCRResponse['boxes'];
@@ -54,17 +55,28 @@ export const parseReceiptWithAI = async (payload: {
 };
 
 export type AiParseStreamEvent =
-  | { type: 'pipeline_start'; agents?: Record<string, string> }
+  | { type: 'pipeline_start'; agents?: Record<string, string>; run_id?: string }
   | { type: 'stage_start'; stage: string; agent?: string }
+  | {
+      type: 'stage_result';
+      stage: string;
+      agent?: string;
+      model?: string;
+      data: AiReceiptParseResponse;
+      run_id?: string;
+      revision_id?: string;
+      markdown_path?: string;
+    }
   | { type: 'stage_end'; stage: string; agent?: string }
   | { type: 'handoff'; from_stage: string; to_stage: string; from_agent?: string; to_agent?: string }
   | { type: 'note'; stage?: string; agent?: string; text: string }
   | { type: 'result'; data: AiReceiptParseResponse }
-  | { type: 'pipeline_done'; elapsed_ms?: number }
+  | { type: 'pipeline_done'; elapsed_ms?: number; run_id?: string }
   | { type: 'error'; detail?: string };
 
 export const parseReceiptWithAIStream = async (
   payload: {
+    receiptId?: string;
     text_raw: string;
     fields?: OCRResponse['fields'];
     boxes?: OCRResponse['boxes'];
@@ -164,6 +176,7 @@ export const createReceiptOnServer = async (
   });
 
   const receipt = response.data;
+  const receiptId = receipt.id;
 
   const normalizeOcr = (ocr: OCRResponse): OCRResponse => ({
     ...ocr,
@@ -172,10 +185,8 @@ export const createReceiptOnServer = async (
   });
 
   if (receipt.ocr) {
-    return normalizeOcr(receipt.ocr);
+    return { ...normalizeOcr(receipt.ocr), receiptId } as OCRResponse;
   }
-
-  const receiptId = receipt.id;
   if (!receiptId) {
     throw new Error('Receipt id was not returned by the backend');
   }
@@ -199,7 +210,7 @@ export const createReceiptOnServer = async (
     }
 
     if (latest.ocr) {
-      return normalizeOcr(latest.ocr);
+      return { ...normalizeOcr(latest.ocr), receiptId } as OCRResponse;
     }
     if (latest.ocrStatus === 'error') {
       throw new Error(latest.ocrError || 'OCR failed');

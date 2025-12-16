@@ -150,6 +150,13 @@ class ReceiptAiPipeline:
             ),
             stage="organizer",
         )
+        yield {
+            "type": "stage_result",
+            "stage": "organizer",
+            "agent": stage_label("organizer"),
+            "model": self._models.organizer,
+            "data": self._to_response(d1, payload.text_raw).model_dump(),
+        }
         notes1 = (d1.get("data") or {}).get("notes") if isinstance(d1.get("data"), dict) else None
         if isinstance(notes1, list):
             for n in notes1:
@@ -175,6 +182,13 @@ class ReceiptAiPipeline:
             ),
             stage="auditor",
         )
+        yield {
+            "type": "stage_result",
+            "stage": "auditor",
+            "agent": stage_label("auditor"),
+            "model": self._models.auditor,
+            "data": self._to_response(d2, payload.text_raw).model_dump(),
+        }
         notes2 = (d2.get("data") or {}).get("notes") if isinstance(d2.get("data"), dict) else None
         if isinstance(notes2, list):
             for n in notes2:
@@ -196,6 +210,13 @@ class ReceiptAiPipeline:
             messages=stylist_messages(previous_json=d2),
             stage="stylist",
         )
+        yield {
+            "type": "stage_result",
+            "stage": "stylist",
+            "agent": stage_label("stylist"),
+            "model": self._models.stylist,
+            "data": self._to_response(d3, payload.text_raw).model_dump(),
+        }
         notes3 = (d3.get("data") or {}).get("notes") if isinstance(d3.get("data"), dict) else None
         if isinstance(notes3, list):
             for n in notes3:

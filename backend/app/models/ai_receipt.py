@@ -8,6 +8,7 @@ from app.models.ocr import BoundingBox, OCRFields
 
 
 class AiReceiptParseRequest(BaseModel):
+    receiptId: Optional[str] = None
     text_raw: str
     fields: Optional[OCRFields] = None
     boxes: Optional[list[BoundingBox]] = None

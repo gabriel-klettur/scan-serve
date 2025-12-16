@@ -8,6 +8,7 @@ from app.services.google_vision_ocr_service import GoogleVisionOcrConfig, Google
 from app.services.openai_receipt_parser_service import OpenAiReceiptParserConfig, OpenAiReceiptParserService
 from app.services.ocr_service import OcrService
 from app.services.ocr_queue import OcrJobQueue
+from app.services.ai_trace_service import AiTraceService
 from app.services.receipts_service import ReceiptsService
 from app.services.storage_service import StorageService
 from app.services.ticket_html_renderer import TicketHtmlRenderer
@@ -72,6 +73,11 @@ def _ocr_queue() -> OcrJobQueue:
     )
 
 
+@lru_cache
+def _ai_trace_service() -> AiTraceService:
+    return AiTraceService(db=_db(), runs_dir=settings.logs_dir)
+
+
 def get_storage_service() -> StorageService:
     return _storage()
 
@@ -98,3 +104,7 @@ def get_receipts_service() -> ReceiptsService:
 
 def get_ocr_queue() -> OcrJobQueue:
     return _ocr_queue()
+
+
+def get_ai_trace_service() -> AiTraceService:
+    return _ai_trace_service()

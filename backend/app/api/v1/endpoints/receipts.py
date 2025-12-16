@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from pydantic import BaseModel
 
 from app.core.deps import get_ocr_queue, get_receipts_service, get_storage_service
+from app.core.deps import get_ai_trace_service
+from app.models.ai_trace import AiReceiptRevision, AiReceiptRun
 from app.models.receipts import Receipt
 
 router = APIRouter()
@@ -91,6 +93,35 @@ def get_receipt(
         receipt.ocrStatus = snap.status
         receipt.queuePosition = snap.queue_position
     return receipt
+
+
+@router.get("/{receipt_id}/ai/runs", response_model=list[AiReceiptRun])
+def list_ai_runs(
+    receipt_id: str,
+    trace=Depends(get_ai_trace_service),
+) -> list[AiReceiptRun]:
+    return trace.list_runs(receipt_id=receipt_id)
+
+
+@router.get("/{receipt_id}/ai/runs/{run_id}/revisions", response_model=list[AiReceiptRevision])
+def list_ai_revisions(
+    receipt_id: str,
+    run_id: str,
+    trace=Depends(get_ai_trace_service),
+) -> list[AiReceiptRevision]:
+    return trace.list_revisions(receipt_id=receipt_id, run_id=run_id)
+
+
+@router.get("/{receipt_id}/ai/revisions/{revision_id}", response_model=AiReceiptRevision)
+def get_ai_revision(
+    receipt_id: str,
+    revision_id: str,
+    trace=Depends(get_ai_trace_service),
+) -> AiReceiptRevision:
+    try:
+        return trace.get_revision(receipt_id=receipt_id, revision_id=revision_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.get("/{receipt_id}/ocr-status", response_model=ReceiptOcrStatus)

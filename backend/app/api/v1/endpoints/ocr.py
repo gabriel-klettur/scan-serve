@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
  
 from app.core.deps import (
     get_google_vision_ocr_service,
+    get_ai_trace_service,
     get_ocr_service,
     get_openai_receipt_parser_service,
     get_storage_service,
@@ -190,12 +191,33 @@ async def ocr_ticket_endpoint(
 async def ocr_ai_parse_endpoint(
     payload: AiReceiptParseRequest,
     parser=Depends(get_openai_receipt_parser_service),
+    trace=Depends(get_ai_trace_service),
 ) -> AiReceiptParseResponse:
     if not payload.text_raw or not payload.text_raw.strip():
         raise HTTPException(status_code=400, detail="text_raw is required")
 
     try:
-        return parser.parse(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes)
+        receipt_id = (payload.receiptId or "").strip() or None
+        if not receipt_id:
+            return parser.parse(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes)
+
+        run = trace.start_run(receipt_id=receipt_id, agents={})
+        try:
+            parsed = parser.parse(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes)
+            trace.add_revision(
+                receipt_id=receipt_id,
+                run_id=run.id,
+                stage="result",
+                agent_label="Final",
+                model=None,
+                result=parsed,
+            )
+            trace.finish_run(receipt_id=receipt_id, run_id=run.id, status="done", error=None, elapsed_ms=None)
+            return parsed
+        except Exception as e:
+            msg = str(e) or "OpenAI receipt parse failed"
+            trace.finish_run(receipt_id=receipt_id, run_id=run.id, status="error", error=msg, elapsed_ms=None)
+            raise
     except Exception as e:
         logging.getLogger("app").exception("openai_receipt_parse_failed")
         msg = str(e) or "OpenAI receipt parse failed"
@@ -208,17 +230,59 @@ async def ocr_ai_parse_endpoint(
 async def ocr_ai_parse_stream_endpoint(
     payload: AiReceiptParseRequest,
     parser=Depends(get_openai_receipt_parser_service),
+    trace=Depends(get_ai_trace_service),
 ):
     if not payload.text_raw or not payload.text_raw.strip():
         raise HTTPException(status_code=400, detail="text_raw is required")
 
     def event_stream() -> Iterator[str]:
+        run_id = None
+        receipt_id = (payload.receiptId or "").strip() or None
         try:
             for event in parser.parse_stream(text_raw=payload.text_raw, fields_hint=payload.fields, boxes=payload.boxes):
-                yield json.dumps(event, ensure_ascii=False) + "\n"
+                if receipt_id and event.get("type") == "pipeline_start":
+                    agents = event.get("agents") if isinstance(event.get("agents"), dict) else None
+                    run = trace.start_run(receipt_id=receipt_id, agents=agents)
+                    run_id = run.id
+                    yield json.dumps({**event, "run_id": run_id}, ensure_ascii=False) + "\n"
+                    continue
+
+                if receipt_id and run_id and event.get("type") == "pipeline_done":
+                    trace.finish_run(receipt_id=receipt_id, run_id=run_id, status="done", error=None, elapsed_ms=event.get("elapsed_ms"))
+                    yield json.dumps({**event, "run_id": run_id}, ensure_ascii=False) + "\n"
+                    continue
+
+                if receipt_id and run_id and event.get("type") == "stage_result":
+                    stage = event.get("stage")
+                    agent = event.get("agent")
+                    model = event.get("model")
+                    data = event.get("data")
+                    try:
+                        parsed = AiReceiptParseResponse(**(data or {}))
+                        rev = trace.add_revision(
+                            receipt_id=receipt_id,
+                            run_id=run_id,
+                            stage=str(stage or "unknown"),
+                            agent_label=str(agent) if agent is not None else None,
+                            model=str(model) if model is not None else None,
+                            result=parsed,
+                        )
+                        yield json.dumps({**event, "run_id": run_id, "revision_id": rev.id, "markdown_path": rev.markdownPath}, ensure_ascii=False) + "\n"
+                        continue
+                    except Exception:
+                        # Fall back to emitting the raw stage_result even if persistence fails.
+                        yield json.dumps({**event, "run_id": run_id}, ensure_ascii=False) + "\n"
+                        continue
+
+                yield json.dumps({**event, **({"run_id": run_id} if run_id else {})}, ensure_ascii=False) + "\n"
         except Exception as e:
             logging.getLogger("app").exception("openai_receipt_parse_stream_failed")
             msg = str(e) or "OpenAI receipt parse failed"
+            if receipt_id and run_id:
+                try:
+                    trace.finish_run(receipt_id=receipt_id, run_id=run_id, status="error", error=msg, elapsed_ms=None)
+                except Exception:
+                    pass
             yield json.dumps({"type": "error", "detail": msg}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(

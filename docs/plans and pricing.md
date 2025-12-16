@@ -57,6 +57,7 @@ Diseñado para empresas (restaurantes, bares, hoteles y organizaciones con opera
 
 - **Propuesta de valor**
   - Lectura completa + proceso de **corrección con IA** para “paliar” problemas típicos de OCR (sombras, inclinación, ruido, etc.).
+  - Implementación opcional vía **WhatsApp/Telegram**: enviar una foto del ticket y recibir el resultado estructurado directamente en el teléfono.
   - Objetivo de fiabilidad: **95%** como estándar operativo, con mejora progresiva hacia un rango **95%–100%** según el caso de uso, calidad de imágenes y calibración.
 - **Qué significa “95% de fiabilidad”**
   - Un enfoque de **control de calidad** (quality control) donde combinamos:

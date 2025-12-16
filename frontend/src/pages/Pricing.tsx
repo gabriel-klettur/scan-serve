@@ -1,45 +1,10 @@
-import { CreditCard, FolderOpen, Scan } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { AppHeader } from "@/components/navigation/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Pricing = () => {
   return (
     <div className="min-h-screen bg-background">
-      <header className="relative border-b border-border bg-card/50 backdrop-blur-xl">
-        <div className="container mx-auto px-4 h-16 flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-              <Scan className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">ReceiptVision</h1>
-              <p className="text-xs text-muted-foreground">AI-Powered OCR</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Button asChild variant="outline" className="hidden sm:inline-flex">
-              <Link to="/">
-                <Scan className="w-4 h-4" />
-                Home
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="hidden sm:inline-flex">
-              <Link to="/receipts">
-                <FolderOpen className="w-4 h-4" />
-                Receipts
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="hidden sm:inline-flex">
-              <Link to="/pricing">
-                <CreditCard className="w-4 h-4" />
-                Pricing
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="relative container mx-auto px-4 py-10">
         <div className="max-w-4xl mx-auto">
@@ -80,6 +45,7 @@ const Pricing = () => {
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <p>For restaurants, bars, hotels, and high-volume teams.</p>
                 <p>Full reading + AI-assisted correction and validation flows.</p>
+                <p>Optional WhatsApp/Telegram capture: send a photo and get structured results on your phone.</p>
                 <p>Target reliability: 95% (improving toward 95–100% depending on conditions).</p>
               </CardContent>
             </Card>

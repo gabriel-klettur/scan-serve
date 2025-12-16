@@ -17,6 +17,7 @@ export interface OCRResponse {
   confidence_avg: number;
   fields: OCRFields;
   boxes: BoundingBox[];
+  receiptId?: string;
 }
 
 export interface AiReceiptParseResponse {

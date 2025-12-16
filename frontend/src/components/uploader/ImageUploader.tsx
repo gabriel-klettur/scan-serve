@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState, type ChangeEventHandler } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Image, X, AlertCircle, Camera } from 'lucide-react';
+import { Upload, Image, X, AlertCircle, Camera, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
 import { createReceiptOnServer, type OcrEngine } from '@/services/api';
@@ -13,7 +14,8 @@ import { createReceipt } from '@/features/receipts/db/receiptsRepo';
 import { CameraCapture } from '@/features/receipts/components/CameraCapture';
 
 export const ImageUploader = () => {
-  const { status, originalImage, setStatus, setOriginalImage, setResult, setError, setQueueInfo, reset } = useOCRStore();
+  const { status, result, originalImage, setStatus, setOriginalImage, setResult, setError, setQueueInfo, reset } = useOCRStore();
+  const navigate = useNavigate();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [engineDialogOpen, setEngineDialogOpen] = useState(false);
@@ -136,6 +138,21 @@ export const ImageUploader = () => {
     setShowCamera(false);
   };
 
+  const canViewResults = status === 'success' && Boolean(result) && Boolean(originalImage);
+
+  const handleOpenResults = () => {
+    if (!canViewResults) return;
+    navigate('/results');
+  };
+
+  const handlePreviewKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (!canViewResults) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleOpenResults();
+    }
+  };
+
   const handleCaptureInput: ChangeEventHandler<HTMLInputElement> = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -156,18 +173,40 @@ export const ImageUploader = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative rounded-xl overflow-hidden border border-border bg-card"
+        onClick={handleOpenResults}
+        onKeyDown={handlePreviewKeyDown}
+        role={canViewResults ? 'button' : undefined}
+        tabIndex={canViewResults ? 0 : -1}
+        className={cn(
+          'relative rounded-xl overflow-hidden border border-border bg-card group',
+          canViewResults &&
+            'cursor-pointer hover:border-amber-200/50 hover:ring-1 hover:ring-amber-200/40 hover:shadow-[0_0_22px_rgba(253,230,138,0.18)]',
+        )}
       >
         <img
           src={originalImage}
           alt="Uploaded receipt"
           className="w-full h-auto max-h-[300px] object-contain"
         />
+
+        {canViewResults && (
+          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-background/10 to-transparent" />
+            <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg bg-background/70 border border-amber-200/30 backdrop-blur-sm text-foreground flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4 text-amber-200/90" />
+              <span className="text-xs font-medium">Open Results</span>
+            </div>
+          </div>
+        )}
+
         <Button
           variant="icon"
           size="icon"
           className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm"
-          onClick={handleReset}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleReset();
+          }}
         >
           <X className="w-4 h-4" />
         </Button>
