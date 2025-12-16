@@ -1,14 +1,12 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileQuestion, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useReceiptFoldersQuery } from "../hooks/useReceiptFolders";
 import { useReceiptsQuery } from "../hooks/useReceipts";
 import type { Receipt } from "../types/receipt";
-import { ReceiptListItem } from "./ReceiptListItem";
-import { FolderTreeExplorer, type ExplorerFolderSelection } from "./FolderTreeExplorer";
+import { FileTreeExplorer, type FileTreeSelection } from "./FileTreeExplorer";
+import { ReceiptPreviewPanel } from "./ReceiptPreviewPanel";
 
 const matchesQuery = (receipt: Receipt, query: string): boolean => {
   const q = query.trim().toLowerCase();
@@ -21,69 +19,75 @@ const matchesQuery = (receipt: Receipt, query: string): boolean => {
 };
 
 export const ReceiptExplorerTab = () => {
-  const foldersQuery = useReceiptFoldersQuery();
   const receiptsQuery = useReceiptsQuery(undefined);
-
-  const folders = foldersQuery.data ?? [];
   const receipts = receiptsQuery.data ?? [];
 
-  const [selection, setSelection] = useState<ExplorerFolderSelection>({ type: "all" });
+  const [selection, setSelection] = useState<FileTreeSelection>({ type: "none" });
   const [query, setQuery] = useState("");
 
   const filteredReceipts = useMemo(() => {
-    const folderFiltered = (() => {
-      if (selection.type === "all") return receipts;
-      if (selection.type === "unassigned") return receipts.filter((r) => r.folderId === null);
-      return receipts.filter((r) => r.folderId === selection.folderId);
-    })();
+    return receipts.filter((r) => matchesQuery(r, query));
+  }, [query, receipts]);
 
-    return folderFiltered.filter((r) => matchesQuery(r, query));
-  }, [query, receipts, selection]);
+  const selectedReceipt = useMemo(() => {
+    if (selection.type !== "file") return null;
+    return receipts.find((r) => r.id === selection.receiptId) ?? null;
+  }, [receipts, selection]);
+
+  const matchCount = filteredReceipts.length;
 
   return (
-    <Card className="min-h-[70vh]">
-      <CardHeader>
-        <CardTitle className="text-lg">Explorer</CardTitle>
-      </CardHeader>
-      <CardContent className="min-h-0">
-        <div className="grid gap-4 lg:[grid-template-columns:320px_1fr] min-h-[62vh]">
-          <div className="min-h-0">
-            <FolderTreeExplorer selection={selection} onChangeSelection={setSelection} />
-          </div>
-
-          <div className="min-h-0 flex flex-col">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <Card className="min-h-[70vh] border-border/50 shadow-sm overflow-hidden">
+      <CardContent className="p-0">
+        <div className="grid lg:grid-cols-[260px_1fr] min-h-[70vh]">
+          {/* Sidebar: Search + File Tree */}
+          <div className="flex flex-col border-r border-border/50 bg-muted/40">
+            <div className="p-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search scans (filename or OCR text)…"
-                  className="pl-9"
+                  placeholder="Search files…"
+                  className="h-8 pl-8 text-sm bg-background/60 border-border/40 focus:bg-background"
                 />
               </div>
-              <div className="text-sm text-muted-foreground whitespace-nowrap">
-                {filteredReceipts.length} result{filteredReceipts.length === 1 ? "" : "s"}
-              </div>
+              {query && (
+                <div className="text-xs text-muted-foreground mt-2 px-1">
+                  {matchCount} match{matchCount === 1 ? "" : "es"}
+                </div>
+              )}
             </div>
 
-            <Separator className="my-4" />
-
-            {receiptsQuery.isLoading ? <div className="text-sm text-muted-foreground">Loading…</div> : null}
-
-            {!receiptsQuery.isLoading && filteredReceipts.length === 0 ? (
-              <div className="text-sm text-muted-foreground">No receipts found.</div>
-            ) : null}
+            <Separator className="opacity-50" />
 
             <div className="flex-1 min-h-0">
-              <ScrollArea className="h-full pr-2">
-                <div className="grid gap-4">
-                  {filteredReceipts.map((r) => (
-                    <ReceiptListItem key={r.id} receipt={r} folders={folders} />
-                  ))}
-                </div>
-              </ScrollArea>
+              <FileTreeExplorer
+                selection={selection}
+                onChangeSelection={setSelection}
+              />
             </div>
+          </div>
+
+          {/* Main content: Receipt Preview */}
+          <div className="flex flex-col min-h-0 bg-background">
+            {receiptsQuery.isLoading && (
+              <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                Loading…
+              </div>
+            )}
+
+            {!receiptsQuery.isLoading && !selectedReceipt && (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8">
+                <FileQuestion className="h-16 w-16 mb-4 opacity-30" />
+                <p className="text-sm font-medium">No file selected</p>
+                <p className="text-xs text-muted-foreground/70 mt-1 text-center max-w-xs">
+                  Select a file from the explorer to preview its contents
+                </p>
+              </div>
+            )}
+
+            {selectedReceipt && <ReceiptPreviewPanel receipt={selectedReceipt} />}
           </div>
         </div>
       </CardContent>
