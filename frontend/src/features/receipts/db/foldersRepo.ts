@@ -1,11 +1,13 @@
 import { openReceiptsDb } from "./database";
 import { requestToPromise, transactionToPromise } from "./idb";
-import { STORE_RECEIPT_FOLDERS, STORE_RECEIPTS } from "./constants";
+import { STORE_RECEIPT_FOLDERS, STORE_RECEIPT_SETTINGS, STORE_RECEIPTS } from "./constants";
 import type { ReceiptFolder } from "../types/folder";
 import { createId } from "../utils/id";
+import { KEY_DEFAULT_FOLDER_ID } from "./settingsRepo";
 
 export interface CreateFolderInput {
   name: string;
+  parentId?: string | null;
 }
 
 export interface UpdateFolderInput {
@@ -40,6 +42,7 @@ export const createFolder = async (input: CreateFolderInput): Promise<ReceiptFol
   const folder: ReceiptFolder = {
     id: createId(),
     name: input.name.trim(),
+    parentId: input.parentId ?? null,
     createdAt: now,
     updatedAt: now,
   };
@@ -80,36 +83,81 @@ export const updateFolder = async (input: UpdateFolderInput): Promise<ReceiptFol
 export const deleteFolder = async (id: string): Promise<void> => {
   const db = await openReceiptsDb();
 
-  const tx = db.transaction([STORE_RECEIPT_FOLDERS, STORE_RECEIPTS], "readwrite");
+  const tx = db.transaction([STORE_RECEIPT_FOLDERS, STORE_RECEIPT_SETTINGS, STORE_RECEIPTS], "readwrite");
   const foldersStore = tx.objectStore(STORE_RECEIPT_FOLDERS);
+  const settingsStore = tx.objectStore(STORE_RECEIPT_SETTINGS);
   const receiptsStore = tx.objectStore(STORE_RECEIPTS);
   const receiptsByFolder = receiptsStore.index("by_folderId");
 
-  // Strategy: receipts in this folder become "unassigned" (folderId = null)
-  const range = IDBKeyRange.only(id);
+  const allFolders = await requestToPromise<ReceiptFolder[]>(foldersStore.getAll());
 
-  await new Promise<void>((resolve, reject) => {
-    const cursorRequest = receiptsByFolder.openCursor(range);
+  const childrenByParent = new Map<string | null, string[]>();
+  for (const f of allFolders) {
+    const parentKey = f.parentId ?? null;
+    const current = childrenByParent.get(parentKey) ?? [];
+    current.push(f.id);
+    childrenByParent.set(parentKey, current);
+  }
 
-    cursorRequest.onsuccess = () => {
-      const cursor = cursorRequest.result;
-      if (!cursor) {
-        resolve();
-        return;
-      }
+  const folderIdsToDelete: string[] = [];
+  const queue: string[] = [id];
 
-      cursor.update({
-        ...cursor.value,
-        folderId: null,
-        updatedAt: Date.now(),
-      });
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (!currentId) {
+      continue;
+    }
 
-      cursor.continue();
-    };
+    folderIdsToDelete.push(currentId);
 
-    cursorRequest.onerror = () => reject(cursorRequest.error);
-  });
+    const children = childrenByParent.get(currentId) ?? [];
+    for (const childId of children) {
+      queue.push(childId);
+    }
+  }
 
-  await requestToPromise(foldersStore.delete(id));
+  for (const folderId of folderIdsToDelete) {
+    const range = IDBKeyRange.only(folderId);
+
+    await new Promise<void>((resolve, reject) => {
+      const cursorRequest = receiptsByFolder.openCursor(range);
+
+      cursorRequest.onsuccess = () => {
+        const cursor = cursorRequest.result;
+        if (!cursor) {
+          resolve();
+          return;
+        }
+
+        cursor.update({
+          ...cursor.value,
+          folderId: null,
+          updatedAt: Date.now(),
+        });
+
+        cursor.continue();
+      };
+
+      cursorRequest.onerror = () => reject(cursorRequest.error);
+    });
+  }
+
+  const currentDefault = await requestToPromise<{ key: string; value: string | null } | undefined>(
+    settingsStore.get(KEY_DEFAULT_FOLDER_ID),
+  );
+
+  if (currentDefault?.value && folderIdsToDelete.includes(currentDefault.value)) {
+    await requestToPromise(
+      settingsStore.put({
+        key: KEY_DEFAULT_FOLDER_ID,
+        value: null,
+      }),
+    );
+  }
+
+  for (const folderId of folderIdsToDelete) {
+    await requestToPromise(foldersStore.delete(folderId));
+  }
+
   await transactionToPromise(tx);
 };

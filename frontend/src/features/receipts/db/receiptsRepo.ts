@@ -4,9 +4,10 @@ import { createId } from "../utils/id";
 import { openReceiptsDb } from "./database";
 import { requestToPromise, transactionToPromise } from "./idb";
 import { STORE_RECEIPT_FOLDERS, STORE_RECEIPTS } from "./constants";
+import { getDefaultFolderId } from "./settingsRepo";
 
 export interface CreateReceiptInput {
-  folderId: string | null;
+  folderId?: string | null;
   file: File;
   ocr: OCRResponse | null;
 }
@@ -85,9 +86,11 @@ export const getReceiptById = async (id: string): Promise<Receipt | null> => {
 export const createReceipt = async (input: CreateReceiptInput): Promise<Receipt> => {
   const now = Date.now();
 
+  const resolvedFolderId = input.folderId === undefined ? await getDefaultFolderId() : input.folderId;
+
   const receipt: Receipt = {
     id: createId(),
-    folderId: input.folderId,
+    folderId: resolvedFolderId ?? null,
     createdAt: now,
     updatedAt: now,
     originalFileName: input.file.name,

@@ -21,6 +21,7 @@ import { createReceiptOnServer, type OcrEngine } from "@/services/api";
 import type { ReceiptFolder } from "../types/folder";
 import type { Receipt } from "../types/receipt";
 import { useObjectUrl } from "../utils/objectUrl";
+import { folderPathLabel } from "../utils/folderTree";
 import { useDeleteReceiptMutation, useUpdateReceiptFolderMutation, useUpdateReceiptOcrMutation } from "../hooks/useReceipts";
 
 const UNASSIGNED_VALUE = "__unassigned__";
@@ -138,7 +139,7 @@ export const ReceiptListItem = ({ receipt, folders }: ReceiptListItemProps) => {
                 <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
                 {folders.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
-                    {f.name}
+                    {folderPathLabel(folders, f.id)}
                   </SelectItem>
                 ))}
               </SelectContent>

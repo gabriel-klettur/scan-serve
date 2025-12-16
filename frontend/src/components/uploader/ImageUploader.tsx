@@ -74,7 +74,6 @@ export const ImageUploader = () => {
 
       try {
         await createReceipt({
-          folderId: null,
           file,
           ocr: ocrResult,
         });

@@ -1,4 +1,4 @@
-import { useCallback, useState, type ChangeEventHandler } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEventHandler } from "react";
 import { Upload, Smartphone, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,21 +11,41 @@ import { getMockOCRResponse } from "@/services/api";
 import { CameraCapture } from "./CameraCapture";
 import { useReceiptFoldersQuery } from "../hooks/useReceiptFolders";
 import { useCreateReceiptMutation } from "../hooks/useReceipts";
+import { useDefaultFolderIdQuery } from "../hooks/useReceiptSettings";
 import { useObjectUrl } from "../utils/objectUrl";
+import { folderPathLabel } from "../utils/folderTree";
 
 const UNASSIGNED_VALUE = "__unassigned__";
+const DEFAULT_VALUE = "__default__";
 
 export const ReceiptUploadTab = () => {
   const foldersQuery = useReceiptFoldersQuery();
   const createReceiptMutation = useCreateReceiptMutation();
+  const defaultFolderIdQuery = useDefaultFolderIdQuery();
 
-  const [folderValue, setFolderValue] = useState<string>(UNASSIGNED_VALUE);
+  const [folderValue, setFolderValue] = useState<string>(DEFAULT_VALUE);
   const [file, setFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const previewUrl = useObjectUrl(file);
 
-  const folderId = folderValue === UNASSIGNED_VALUE ? null : folderValue;
+  const resolvedDefaultFolderId = defaultFolderIdQuery.data ?? null;
+
+  const folderId = useMemo(() => {
+    if (folderValue === DEFAULT_VALUE) {
+      return undefined;
+    }
+    if (folderValue === UNASSIGNED_VALUE) {
+      return null;
+    }
+    return folderValue;
+  }, [folderValue]);
+
+  useEffect(() => {
+    if (folderValue === DEFAULT_VALUE && resolvedDefaultFolderId === null) {
+      setFolderValue(UNASSIGNED_VALUE);
+    }
+  }, [folderValue, resolvedDefaultFolderId]);
 
   const reset = useCallback(() => {
     setFile(null);
@@ -105,10 +125,14 @@ export const ReceiptUploadTab = () => {
                 <SelectValue placeholder="Select folder" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={DEFAULT_VALUE}>
+                  Default
+                  {resolvedDefaultFolderId ? ` (${folderPathLabel(foldersQuery.data ?? [], resolvedDefaultFolderId)})` : ""}
+                </SelectItem>
                 <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
                 {(foldersQuery.data ?? []).map((f) => (
                   <SelectItem key={f.id} value={f.id}>
-                    {f.name}
+                    {folderPathLabel(foldersQuery.data ?? [], f.id)}
                   </SelectItem>
                 ))}
               </SelectContent>

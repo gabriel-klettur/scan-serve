@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useReceiptFoldersQuery } from "../hooks/useReceiptFolders";
 import { useReceiptsQuery } from "../hooks/useReceipts";
 import { ReceiptListItem } from "./ReceiptListItem";
+import { folderPathLabel } from "../utils/folderTree";
 
 const FILTER_ALL = "__all__";
 const FILTER_UNASSIGNED = "__unassigned__";
@@ -51,7 +52,7 @@ export const ReceiptHistoryTab = () => {
                 <SelectItem value={FILTER_UNASSIGNED}>Unassigned</SelectItem>
                 {folders.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
-                    {f.name}
+                    {folderPathLabel(folders, f.id)}
                   </SelectItem>
                 ))}
               </SelectContent>
