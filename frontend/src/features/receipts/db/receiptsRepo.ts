@@ -181,3 +181,12 @@ export const deleteReceipt = async (id: string): Promise<void> => {
   await requestToPromise(store.delete(id));
   await transactionToPromise(tx);
 };
+
+export const deleteAllReceipts = async (): Promise<void> => {
+  const db = await openReceiptsDb();
+  const tx = db.transaction(STORE_RECEIPTS, "readwrite");
+  const store = tx.objectStore(STORE_RECEIPTS);
+
+  await requestToPromise(store.clear());
+  await transactionToPromise(tx);
+};

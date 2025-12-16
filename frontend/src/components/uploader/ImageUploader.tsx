@@ -5,24 +5,38 @@ import { Upload, Image, X, AlertCircle, Camera, ArrowUpRight } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import { useOCRStore } from '@/store/ocrStore';
 import { useScanResultsStore } from '@/store/scanResultsStore';
+import { useUploadSettingsStore } from '@/store/uploadSettingsStore';
 import { validateImageFile, fileToDataUrl } from '@/utils/image';
-import { createReceiptOnServer, type OcrEngine } from '@/services/api';
+import { createReceiptOnServer, parseReceiptWithAI, type OcrEngine } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { createReceipt } from '@/features/receipts/db/receiptsRepo';
 import { CameraCapture } from '@/features/receipts/components/CameraCapture';
+import { SingleUploadSettings } from './SingleUploadSettings';
 
 export const ImageUploader = () => {
-  const { status, result, originalImage, setStatus, setOriginalImage, setResult, setError, setQueueInfo, reset } = useOCRStore();
-  const { addTab } = useScanResultsStore();
+  const {
+    status,
+    result,
+    originalImage,
+    setStatus,
+    setOriginalImage,
+    setResult,
+    setError,
+    setQueueInfo,
+    setAiStatus,
+    setAiResult,
+    setAiError,
+    resetAiStages,
+    resetAi,
+    reset,
+  } = useOCRStore();
+  const { addTab, updateTab } = useScanResultsStore();
+  const { selectedEngine, applyAiEnhancement } = useUploadSettingsStore();
   const navigate = useNavigate();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [engineDialogOpen, setEngineDialogOpen] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingFileName, setPendingFileName] = useState<string>('');
   const captureInputRef = useRef<HTMLInputElement | null>(null);
 
   const isLikelyMobile = (() => {
@@ -61,6 +75,8 @@ export const ImageUploader = () => {
 
   const processImage = useCallback(async (file: File, engine: OcrEngine, fileName: string) => {
     try {
+      resetAi();
+      resetAiStages();
       setQueueInfo(null, null);
       setStatus('uploading');
       setValidationError(null);
@@ -76,7 +92,7 @@ export const ImageUploader = () => {
       setResult(ocrResult);
 
       // Add tab to the scan results tabs in the header
-      addTab({
+      const tabId = addTab({
         fileName: fileName || file.name,
         thumbnailUrl: dataUrl,
         originalImageUrl: dataUrl,
@@ -85,6 +101,32 @@ export const ImageUploader = () => {
         aiStageResults: {},
         folder: undefined,
       });
+
+      // Optional: auto-run AI enhancement right after OCR (single mode)
+      if (applyAiEnhancement) {
+        if (ocrResult.receiptId) {
+          try {
+            setAiError(null);
+            setAiResult(null);
+            setAiStatus('processing');
+            const parsed = await parseReceiptWithAI({
+              receiptId: ocrResult.receiptId,
+              text_raw: ocrResult.text_raw,
+              fields: ocrResult.fields,
+              boxes: ocrResult.boxes,
+            });
+            setAiResult(parsed);
+            setAiStatus('success');
+            updateTab(tabId, { aiResult: parsed });
+          } catch (e) {
+            setAiStatus('error');
+            setAiError(e instanceof Error ? e.message : 'AI Enhancement failed');
+          }
+        } else {
+          // No receiptId => AI parse endpoint won't be able to correlate; keep UX consistent.
+          setAiStatus('idle');
+        }
+      }
 
       try {
         await createReceipt({
@@ -107,23 +149,7 @@ export const ImageUploader = () => {
       setQueueInfo(null, null);
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
     }
-  }, [setQueueInfo, setStatus, setOriginalImage, setResult, setError, addTab]);
-
-  const promptEngineAndProcess = useCallback((file: File) => {
-    setPendingFile(file);
-    setPendingFileName(file.name);
-    setEngineDialogOpen(true);
-  }, []);
-
-  const handleEngineChoice = useCallback((engine: Extract<OcrEngine, 'easyocr' | 'vision'>) => {
-    if (!pendingFile) return;
-    const file = pendingFile;
-    const fileName = pendingFileName;
-    setEngineDialogOpen(false);
-    setPendingFile(null);
-    setPendingFileName('');
-    processImage(file, engine, fileName);
-  }, [pendingFile, pendingFileName, processImage]);
+  }, [addTab, applyAiEnhancement, parseReceiptWithAI, resetAi, resetAiStages, setAiError, setAiResult, setAiStatus, setError, setOriginalImage, setQueueInfo, setResult, setStatus, updateTab]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -135,8 +161,8 @@ export const ImageUploader = () => {
       return;
     }
 
-    promptEngineAndProcess(file);
-  }, [promptEngineAndProcess]);
+    processImage(file, selectedEngine, file.name);
+  }, [processImage, selectedEngine]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -180,7 +206,7 @@ export const ImageUploader = () => {
     }
 
     setValidationError(null);
-    promptEngineAndProcess(file);
+    processImage(file, selectedEngine, file.name);
     e.target.value = '';
   };
 
@@ -235,38 +261,7 @@ export const ImageUploader = () => {
 
   return (
     <div className="space-y-3">
-      <Dialog
-        open={engineDialogOpen}
-        onOpenChange={(open) => {
-          setEngineDialogOpen(open);
-          if (!open) {
-            setPendingFile(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>How do you want to scan this receipt?</DialogTitle>
-            <DialogDescription>Choose the OCR engine to process the image.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row sm:justify-end sm:space-x-2">
-            <Button type="button" onClick={() => handleEngineChoice('vision')}>
-              Google Vision (IA)
-            </Button>
-            <Button type="button" variant="outline" onClick={() => handleEngineChoice('easyocr')}>
-              EasyOCR (Local)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setEngineDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SingleUploadSettings disabled={isProcessing} />
 
       <div
         {...getRootProps()}
@@ -350,7 +345,7 @@ export const ImageUploader = () => {
       {showCamera && (
         <CameraCapture
           disabled={isProcessing}
-          onCapture={(file) => promptEngineAndProcess(file)}
+          onCapture={(file) => processImage(file, selectedEngine, file.name)}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CreditCard, History, RefreshCw, Scan, Settings } from 'lucide-react';
+import { CreditCard, Files, RefreshCw, Scan, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: '/', label: 'Home', icon: Scan, end: true },
   { to: '/results', label: 'Results' },
-  { to: '/receipts', label: 'History', icon: History },
+  { to: '/receipts', label: 'Files', icon: Files },
   { to: '/pricing', label: 'Pricing', icon: CreditCard },
 ];
 

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/navigation/AppHeader';
 import { useOCRStore } from '@/store/ocrStore';
-import { ImageUploader } from '@/components/uploader/ImageUploader';
+import { UploadModeSelector } from '@/components/uploader/UploadModeSelector';
 import { Loader } from '@/components/ui/Loader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,7 @@ const Home = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <ImageUploader />
+                  <UploadModeSelector />
                   {hasResult && (
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={reset} className="gap-2">

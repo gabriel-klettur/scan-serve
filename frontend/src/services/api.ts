@@ -222,7 +222,82 @@ export const createReceiptOnServer = async (
   throw new Error('OCR is taking too long. Please try again.');
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Notification API
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type NotificationType = 'per-image' | 'all-complete';
+
+interface NotificationRequest {
+  email: string;
+  notification_type: NotificationType;
+  receipt_count: number;
+  receipt_name?: string;
+  success_count?: number;
+  error_count?: number;
+}
+
+interface NotificationResponse {
+  success: boolean;
+  message: string;
+}
+
+/**
+ * Send a notification request to the backend.
+ * Used for email notifications when batch processing completes.
+ */
+export const sendNotification = async (
+  request: NotificationRequest
+): Promise<NotificationResponse> => {
+  try {
+    const response = await apiClient.post<NotificationResponse>(
+      '/api/v1/notifications/notify',
+      request
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to send notification:', error);
+    return { success: false, message: 'Failed to send notification' };
+  }
+};
+
+/**
+ * Send a batch completion notification.
+ */
+export const sendBatchCompleteNotification = async (
+  email: string,
+  totalCount: number,
+  successCount: number,
+  errorCount: number
+): Promise<NotificationResponse> => {
+  return sendNotification({
+    email,
+    notification_type: 'all-complete',
+    receipt_count: totalCount,
+    success_count: successCount,
+    error_count: errorCount,
+  });
+};
+
+/**
+ * Send a per-image notification.
+ */
+export const sendPerImageNotification = async (
+  email: string,
+  receiptName: string
+): Promise<NotificationResponse> => {
+  return sendNotification({
+    email,
+    notification_type: 'per-image',
+    receipt_count: 1,
+    receipt_name: receiptName,
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Mock data for demo mode
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const getMockOCRResponse = (imageUrl: string): OCRResponse => ({
   original_image_url: imageUrl,
   processed_image_url: imageUrl,

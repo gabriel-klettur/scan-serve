@@ -3,6 +3,7 @@ import type { Receipt } from "../types/receipt";
 import {
   createReceipt,
   deleteReceipt,
+  deleteAllReceipts,
   getReceiptById,
   listReceipts,
   updateReceiptFolder,
@@ -14,6 +15,17 @@ export const useReceiptsQuery = (folderId: string | null | undefined) => {
   return useQuery<Receipt[]>({
     queryKey: receiptKeys.list(folderId),
     queryFn: () => listReceipts(folderId),
+  });
+};
+
+export const useDeleteAllReceiptsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAllReceipts,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: receiptKeys.all });
+    },
   });
 };
 

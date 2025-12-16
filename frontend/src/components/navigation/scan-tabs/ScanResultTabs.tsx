@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useScanResultsStore } from '@/store/scanResultsStore';
@@ -32,6 +32,19 @@ export const ScanResultTabs = () => {
     setStatus,
   } = useOCRStore();
 
+  useEffect(() => {
+    if (location.pathname !== '/results') return;
+    if (!activeTabId) return;
+
+    const tab = tabs.find((t) => t.id === activeTabId);
+    if (!tab) return;
+
+    setOriginalImage(tab.originalImageUrl);
+    setResult(tab.ocrResult);
+    setAiResult(tab.aiResult ?? null);
+    setStatus('success');
+  }, [activeTabId, location.pathname, setAiResult, setOriginalImage, setResult, setStatus, tabs]);
+
   const visibleTabs = getVisibleTabs();
   const overflowTabs = getOverflowTabs();
 
@@ -46,9 +59,7 @@ export const ScanResultTabs = () => {
       // Load tab data into OCR store
       setOriginalImage(tab.originalImageUrl);
       setResult(tab.ocrResult);
-      if (tab.aiResult) {
-        setAiResult(tab.aiResult);
-      }
+      setAiResult(tab.aiResult ?? null);
       setStatus('success');
 
       // Set active tab
