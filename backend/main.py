@@ -146,19 +146,37 @@ def _print_server_banner(host: str, port: int, reload_enabled: bool, log_level: 
 def main() -> None:
     """Run the FastAPI app via Uvicorn.
 
+    Automatically detects Render (via the RENDER env var that Render injects)
+    and forces production-safe settings: host=0.0.0.0, reload=False, PORT from
+    Render.  Local dev settings come from RV_* env vars / .env file.
+
     Environment variables:
-        - RV_HOST: Host to bind (default: 0.0.0.0)
-        - RV_PORT: Port to bind (default: 8000)
+        - RENDER: Set automatically by Render. Triggers production mode.
+        - PORT: Set automatically by Render. The port the server must bind to.
+        - RV_HOST: Host to bind (local dev default: 127.0.0.1)
+        - RV_PORT: Port to bind (local dev default: 8000)
         - RV_PORT_SEARCH_MAX: How many consecutive ports to try (default: 1)
-        - RV_RELOAD: 1/true/yes enables reload (default: true)
+        - RV_RELOAD: 1/true/yes enables reload (local dev default: true)
         - RV_LOG_LEVEL: uvicorn log level (default: info)
     """
 
-    host = os.getenv("RV_HOST", "0.0.0.0")
-    base_port = _parse_int_env("PORT", 0) or _parse_int_env("RV_PORT", 8000)
-    max_port_attempts = _parse_int_env("RV_PORT_SEARCH_MAX", 1)
-    reload_enabled = os.getenv("RV_RELOAD", "false").lower() in {"1", "true", "yes", "y"}
-    log_level = os.getenv("RV_LOG_LEVEL", "info")
+    on_render = os.getenv("RENDER", "").lower() in {"1", "true", "yes"}
+
+    if on_render:
+        # Production on Render: bind all interfaces, use Render's PORT, no reload.
+        host = "0.0.0.0"
+        base_port = _parse_int_env("PORT", 10000)
+        max_port_attempts = 1
+        reload_enabled = False
+        log_level = os.getenv("RV_LOG_LEVEL", "info")
+        print(f"[startup] Render environment detected (RENDER={os.getenv('RENDER')})")
+    else:
+        # Local development: respect RV_* env vars with dev-friendly defaults.
+        host = os.getenv("RV_HOST", "127.0.0.1")
+        base_port = _parse_int_env("RV_PORT", 8000)
+        max_port_attempts = _parse_int_env("RV_PORT_SEARCH_MAX", 1)
+        reload_enabled = os.getenv("RV_RELOAD", "true").lower() in {"1", "true", "yes", "y"}
+        log_level = os.getenv("RV_LOG_LEVEL", "info")
 
     try:
         port = _find_available_port(host, base_port, max_port_attempts)
