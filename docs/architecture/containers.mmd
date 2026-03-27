@@ -1,0 +1,77 @@
+%% C4 Container Diagram - ScanServe
+%% Shows the high-level technology choices and container boundaries
+
+graph TB
+    subgraph boundary [" "]
+        User["👤 End User"]
+        
+        subgraph frontend ["Frontend (Browser)"]
+            SPA["📱 ScanServe SPA
+            ────────────────────
+            React 18 + TypeScript 5
+            Vite 5 + Tailwind CSS
+            shadcn/ui + Radix UI
+            ────────────────────
+            Port: 8080"]
+            
+            IndexedDB["💾 IndexedDB
+            ────────────────
+            Browser Storage
+            ────────────────
+            Receipts, Folders
+            Settings, Images
+            Offline-first"]
+        end
+        
+        subgraph backend ["Backend (Server)"]
+            API["⚡ ScanServe API
+            ────────────────────
+            FastAPI + Uvicorn
+            Python 3.12
+            Pydantic v2
+            ────────────────────
+            Port: 8000"]
+            
+            FileStorage["📁 File Storage
+            ────────────────
+            Local Filesystem
+            ────────────────
+            uploads/
+            data/db.json
+            logs/"]
+        end
+        
+        subgraph external ["External Services"]
+            GoogleVision["☁️ Google Vision API"]
+            OpenAI["🤖 OpenAI API"]
+        end
+    end
+    
+    User -->|"HTTPS
+    Browser"| SPA
+    
+    SPA -->|"Read/Write
+    IDB API"| IndexedDB
+    
+    SPA -->|"REST + NDJSON Stream
+    Axios / fetch"| API
+    
+    API -->|"Read/Write
+    JSON + Images"| FileStorage
+    
+    API -->|"HTTPS REST
+    Vision API"| GoogleVision
+    
+    API -->|"HTTPS REST
+    Chat Completions"| OpenAI
+    
+    %% Styling
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef container fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef database fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#fff
+    
+    class User person
+    class SPA,API container
+    class IndexedDB,FileStorage database
+    class GoogleVision,OpenAI external

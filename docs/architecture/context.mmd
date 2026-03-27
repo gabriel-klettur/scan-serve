@@ -1,0 +1,57 @@
+%% C4 Context Diagram - ScanServe
+%% Shows system boundaries and external actors/systems
+
+graph TB
+    subgraph boundary [" "]
+        direction TB
+        
+        User["👤 End User
+        ─────────────
+        Uploads receipts
+        Views OCR results
+        Triggers AI enhancement
+        Organizes in folders"]
+        
+        ScanServe["📱 ScanServe
+        ─────────────────────
+        Intelligent Receipt OCR Platform
+        ─────────────────────
+        Transforms receipt photos into
+        structured, searchable data using
+        dual OCR and multi-agent AI"]
+        
+        GoogleVision["☁️ Google Cloud Vision API
+        ─────────────────────────
+        External OCR Service
+        ─────────────────────────
+        DOCUMENT_TEXT_DETECTION
+        with language hints (is, en)"]
+        
+        OpenAI["🤖 OpenAI API
+        ─────────────────────
+        External LLM Service
+        ─────────────────────
+        Powers 3-agent pipeline
+        (gpt-5-mini / gpt-5-nano)"]
+    end
+    
+    User -->|"Uploads images
+    Views results
+    Manages receipts"| ScanServe
+    
+    ScanServe -->|"HTTPS REST
+    Base64 image
+    Text extraction"| GoogleVision
+    
+    ScanServe -->|"HTTPS REST
+    Chat completions
+    JSON responses"| OpenAI
+    
+    %% Styling
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef system fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#fff
+    
+    class User person
+    class ScanServe system
+    class GoogleVision,OpenAI external

@@ -1,0 +1,126 @@
+%% Deployment Diagram - ScanServe
+%% Shows infrastructure nodes and deployment strategy
+
+graph TB
+    subgraph user_device ["👤 User Device (Browser)"]
+        Browser["🌐 Web Browser
+        ────────────────
+        Chrome / Firefox / Safari
+        ────────────────
+        Runs SPA
+        IndexedDB storage
+        Camera access"]
+    end
+    
+    subgraph cdn_layer ["CDN / Static Hosting (supuesto)"]
+        Netlify["☁️ Netlify / Vercel
+        ────────────────────
+        Static Hosting + CDN
+        ────────────────────
+        dist/ artifacts
+        Global edge caching
+        HTTPS certificates"]
+    end
+    
+    subgraph paas_layer ["PaaS - Render"]
+        Render["☁️ Render
+        ────────────────────
+        Container Platform
+        ────────────────────
+        Auto-detection via RENDER env
+        PORT binding (10000+)
+        Python 3.12 runtime"]
+        
+        subgraph render_instance ["Web Service Instance"]
+            Uvicorn["⚡ Uvicorn
+            ────────────
+            ASGI Server
+            ────────────
+            host: 0.0.0.0
+            reload: false
+            workers: 1"]
+            
+            FastAPI["🐍 FastAPI App
+            ────────────
+            app.main:app
+            ────────────
+            OCR endpoints
+            AI streaming
+            File serving"]
+            
+            LocalFS["📁 Ephemeral Storage
+            ────────────
+            uploads/
+            data/db.json
+            logs/"]
+        end
+    end
+    
+    subgraph external_apis ["External Cloud APIs"]
+        GoogleCloud["☁️ Google Cloud
+        ────────────────
+        Vision API
+        ────────────────
+        DOCUMENT_TEXT_DETECTION
+        API Key auth"]
+        
+        OpenAI["🤖 OpenAI
+        ────────────────
+        Chat Completions
+        ────────────────
+        gpt-5-mini
+        gpt-5-nano"]
+    end
+    
+    subgraph local_dev ["Local Development"]
+        DevMachine["💻 Developer Machine
+        ────────────────────
+        Windows / macOS / Linux"]
+        
+        ViteDev["📦 Vite Dev Server
+        ────────────
+        localhost:8080
+        HMR enabled
+        SWC compiler"]
+        
+        UvicornDev["⚡ Uvicorn Dev
+        ────────────
+        localhost:8000
+        --reload
+        .env loaded"]
+    end
+    
+    %% Production flow
+    Browser -->|"HTTPS
+    Static assets"| Netlify
+    Browser -->|"HTTPS REST
+    NDJSON Stream"| Render
+    
+    Netlify -.->|"Serves"| Browser
+    
+    Uvicorn --> FastAPI
+    FastAPI --> LocalFS
+    FastAPI -->|"HTTPS"| GoogleCloud
+    FastAPI -->|"HTTPS"| OpenAI
+    
+    %% Dev flow
+    DevMachine --> ViteDev
+    DevMachine --> UvicornDev
+    ViteDev -.->|"Proxy API"| UvicornDev
+    
+    %% Styling
+    classDef browser fill:#4ade80,stroke:#22c55e,color:#000
+    classDef cdn fill:#60a5fa,stroke:#3b82f6,color:#fff
+    classDef paas fill:#f472b6,stroke:#ec4899,color:#fff
+    classDef server fill:#a78bfa,stroke:#8b5cf6,color:#fff
+    classDef storage fill:#fbbf24,stroke:#f59e0b,color:#000
+    classDef external fill:#94a3b8,stroke:#64748b,color:#fff
+    classDef dev fill:#6ee7b7,stroke:#34d399,color:#000
+    
+    class Browser browser
+    class Netlify cdn
+    class Render paas
+    class Uvicorn,FastAPI server
+    class LocalFS storage
+    class GoogleCloud,OpenAI external
+    class DevMachine,ViteDev,UvicornDev dev

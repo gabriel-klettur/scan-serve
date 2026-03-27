@@ -1,0 +1,180 @@
+%% C4 Component Diagram - ScanServe Backend
+%% Shows internal structure of the FastAPI backend
+
+graph TB
+    subgraph api_layer ["API Layer (app/api/v1/endpoints/)"]
+        OCRRouter["🔌 OCR Router
+        ──────────────
+        ocr.py
+        ──────────────
+        POST /ocr
+        POST /ocr/ticket
+        POST /ocr/ai/parse
+        POST /ocr/ai/parse/stream"]
+        
+        ReceiptsRouter["🔌 Receipts Router
+        ──────────────
+        receipts.py
+        ──────────────
+        CRUD /api/v1/receipts
+        Queued OCR support"]
+        
+        FoldersRouter["🔌 Folders Router
+        ──────────────
+        folders.py
+        ──────────────
+        CRUD /api/v1/folders
+        Hierarchy management"]
+        
+        NotificationsRouter["🔌 Notifications Router
+        ──────────────
+        notifications.py
+        ──────────────
+        POST /notify
+        Email triggers"]
+    end
+    
+    subgraph services_layer ["Services Layer (app/services/)"]
+        subgraph ocr_services ["OCR Services"]
+            EasyOCR["📷 EasyOCR Service
+            ──────────────
+            ocr_service.py
+            ──────────────
+            Local OCR engine
+            Field extraction
+            (merchant, date, total)"]
+            
+            VisionOCR["☁️ Vision OCR Service
+            ──────────────
+            google_vision_ocr_service.py
+            ──────────────
+            Cloud OCR
+            Retry logic
+            Line grouping"]
+        end
+        
+        subgraph ai_services ["AI Services (ai_receipt_agents/)"]
+            Pipeline["🤖 AI Pipeline
+            ──────────────
+            pipeline.py
+            ──────────────
+            3-stage orchestration
+            Sync + Stream modes
+            JSON validation"]
+            
+            Prompts["📝 Prompts
+            ──────────────
+            prompts.py
+            ──────────────
+            Organizer (Icelandic)
+            Auditor (validation)
+            Stylist (Markdown)"]
+            
+            LLMClient["🔗 OpenAI Client
+            ──────────────
+            openai_text_client.py
+            ──────────────
+            API wrapper
+            Model selection"]
+        end
+        
+        AITrace["📊 AI Trace Service
+        ──────────────
+        ai_trace_service.py
+        ──────────────
+        Run history
+        Revision snapshots
+        Markdown logs"]
+        
+        OCRQueue["⏳ OCR Queue
+        ──────────────
+        ocr_queue.py
+        ──────────────
+        Thread pool
+        Concurrent jobs
+        Status tracking"]
+        
+        Storage["💾 Storage Service
+        ──────────────
+        storage_service.py
+        ──────────────
+        Upload handling
+        Static files"]
+        
+        TicketRenderer["🎨 Ticket Renderer
+        ──────────────
+        ticket_html_renderer.py
+        ──────────────
+        HTML generation
+        Bounding box overlay"]
+    end
+    
+    subgraph data_layer ["Data Layer"]
+        JSONDb["📁 JSON Database
+        ──────────────
+        data/db.json
+        ──────────────
+        Receipts metadata
+        Folders hierarchy"]
+        
+        Uploads["📁 Uploads
+        ──────────────
+        uploads/
+        ──────────────
+        Original images
+        Processed files"]
+        
+        Logs["📁 Logs
+        ──────────────
+        logs/
+        ──────────────
+        AI trace markdown
+        Run history"]
+    end
+    
+    subgraph external ["External APIs"]
+        GoogleAPI["☁️ Google Vision API"]
+        OpenAIAPI["🤖 OpenAI API"]
+    end
+    
+    %% API to Services
+    OCRRouter --> EasyOCR
+    OCRRouter --> VisionOCR
+    OCRRouter --> Pipeline
+    OCRRouter --> AITrace
+    OCRRouter --> Storage
+    OCRRouter --> TicketRenderer
+    
+    ReceiptsRouter --> OCRQueue
+    ReceiptsRouter --> Storage
+    
+    NotificationsRouter -.->|"Email (supuesto)"| external
+    
+    %% Services internal
+    Pipeline --> Prompts
+    Pipeline --> LLMClient
+    OCRQueue --> EasyOCR
+    OCRQueue --> VisionOCR
+    
+    %% Services to Data
+    AITrace --> Logs
+    Storage --> Uploads
+    ReceiptsRouter --> JSONDb
+    FoldersRouter --> JSONDb
+    
+    %% Services to External
+    VisionOCR --> GoogleAPI
+    LLMClient --> OpenAIAPI
+    
+    %% Styling
+    classDef router fill:#6366f1,stroke:#4338ca,color:#fff
+    classDef service fill:#22c55e,stroke:#15803d,color:#fff
+    classDef ai fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef data fill:#64748b,stroke:#475569,color:#fff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#fff
+    
+    class OCRRouter,ReceiptsRouter,FoldersRouter,NotificationsRouter router
+    class EasyOCR,VisionOCR,AITrace,OCRQueue,Storage,TicketRenderer service
+    class Pipeline,Prompts,LLMClient ai
+    class JSONDb,Uploads,Logs data
+    class GoogleAPI,OpenAIAPI external

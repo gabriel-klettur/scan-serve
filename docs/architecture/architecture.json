@@ -1,0 +1,228 @@
+{
+  "system_name": "ScanServe",
+  "purpose": "Intelligent Receipt OCR Platform that transforms receipt photos into structured, searchable data using dual OCR engines and a multi-agent AI pipeline with real-time streaming",
+  "actors": [
+    {
+      "id": "user",
+      "name": "End User",
+      "description": "Uploads receipt images, views OCR results, triggers AI enhancement, and organizes receipts in folders"
+    }
+  ],
+  "external_systems": [
+    {
+      "id": "google_vision",
+      "name": "Google Cloud Vision API",
+      "type": "OCR Service",
+      "description": "Cloud-based OCR with DOCUMENT_TEXT_DETECTION for high-accuracy text extraction",
+      "protocol": "HTTPS REST"
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI API",
+      "type": "LLM Service",
+      "description": "Powers the 3-stage AI receipt parsing pipeline (Organizer, Auditor, Stylist agents)",
+      "protocol": "HTTPS REST"
+    }
+  ],
+  "containers": [
+    {
+      "id": "spa",
+      "name": "ScanServe SPA",
+      "type": "Single Page Application",
+      "technology": "React 18, TypeScript 5, Vite 5, Tailwind CSS, shadcn/ui",
+      "description": "Modern web frontend with offline-first storage, real-time AI streaming UI, and responsive design",
+      "port": 8080
+    },
+    {
+      "id": "api",
+      "name": "ScanServe API",
+      "type": "REST API Server",
+      "technology": "FastAPI, Uvicorn, Pydantic v2, Python 3.12",
+      "description": "Backend API handling OCR processing, AI pipeline orchestration, file storage, and receipt management",
+      "port": 8000
+    },
+    {
+      "id": "indexeddb",
+      "name": "IndexedDB",
+      "type": "Browser Database",
+      "technology": "IndexedDB (raw API)",
+      "description": "Client-side persistence for receipts, folders, and settings with offline support"
+    },
+    {
+      "id": "file_storage",
+      "name": "File Storage",
+      "type": "Local File System",
+      "technology": "File-based JSON + Static Files",
+      "description": "Server-side storage for uploaded images, OCR results, AI trace logs, and JSON database"
+    }
+  ],
+  "components": {
+    "backend": [
+      {
+        "id": "ocr_router",
+        "name": "OCR Router",
+        "path": "app/api/v1/endpoints/ocr.py",
+        "description": "FastAPI endpoints for OCR processing, AI parsing (sync + streaming), and HTML ticket rendering"
+      },
+      {
+        "id": "receipts_router",
+        "name": "Receipts Router",
+        "path": "app/api/v1/endpoints/receipts.py",
+        "description": "CRUD endpoints for receipt management with queued OCR support"
+      },
+      {
+        "id": "folders_router",
+        "name": "Folders Router",
+        "path": "app/api/v1/endpoints/folders.py",
+        "description": "Folder hierarchy management for receipt organization"
+      },
+      {
+        "id": "notifications_router",
+        "name": "Notifications Router",
+        "path": "app/api/v1/endpoints/notifications.py",
+        "description": "Email notification triggers for batch processing completion"
+      },
+      {
+        "id": "ocr_service",
+        "name": "EasyOCR Service",
+        "path": "app/services/ocr_service.py",
+        "description": "Local OCR using EasyOCR with field extraction heuristics (merchant, date, total)"
+      },
+      {
+        "id": "vision_service",
+        "name": "Google Vision OCR Service",
+        "path": "app/services/google_vision_ocr_service.py",
+        "description": "Cloud OCR integration with retry logic and line grouping algorithm"
+      },
+      {
+        "id": "ai_pipeline",
+        "name": "AI Receipt Pipeline",
+        "path": "app/services/ai_receipt_agents/pipeline.py",
+        "description": "3-stage LLM orchestration: Organizer → Auditor → Stylist with JSON validation and streaming"
+      },
+      {
+        "id": "ai_trace",
+        "name": "AI Trace Service",
+        "path": "app/services/ai_trace_service.py",
+        "description": "Observability layer storing run history, revisions, and Markdown snapshots"
+      },
+      {
+        "id": "ocr_queue",
+        "name": "OCR Queue",
+        "path": "app/services/ocr_queue.py",
+        "description": "Thread-based concurrent job queue for batch OCR processing"
+      },
+      {
+        "id": "storage_service",
+        "name": "Storage Service",
+        "path": "app/services/storage_service.py",
+        "description": "File upload handling and static file management"
+      }
+    ],
+    "frontend": [
+      {
+        "id": "receipts_feature",
+        "name": "Receipts Feature Module",
+        "path": "src/features/receipts/",
+        "description": "Self-contained feature with IndexedDB repos, TanStack Query hooks, and UI components"
+      },
+      {
+        "id": "ocr_store",
+        "name": "OCR Store",
+        "path": "src/store/ocrStore.ts",
+        "description": "Zustand store for OCR state, AI pipeline progress, and bounding box interactions"
+      },
+      {
+        "id": "api_service",
+        "name": "API Service",
+        "path": "src/services/api.ts",
+        "description": "Axios REST client + native fetch NDJSON stream consumer"
+      }
+    ]
+  },
+  "main_flows": [
+    {
+      "id": "ai_parse_stream",
+      "name": "AI Receipt Parsing (Streaming)",
+      "description": "User triggers AI enhancement → Backend orchestrates 3-agent pipeline → NDJSON events stream to UI in real-time",
+      "steps": [
+        "User clicks 'Enhance with AI' on OCR result",
+        "Frontend POSTs to /ocr/ai/parse/stream with text_raw and boxes",
+        "Backend creates AI trace run for observability",
+        "Organizer agent normalizes text with Icelandic context",
+        "Handoff event sent, Auditor agent validates fields",
+        "Handoff event sent, Stylist agent generates clean Markdown",
+        "Each stage emits stage_start, stage_result, notes, stage_end events",
+        "Final result event with structured receipt data",
+        "Frontend updates UI progressively via ocrStore"
+      ]
+    },
+    {
+      "id": "batch_ocr",
+      "name": "Batch OCR Processing",
+      "description": "Multi-file upload with queued processing and optional email notifications",
+      "steps": [
+        "User drops multiple receipt images",
+        "Frontend creates receipts via /api/v1/receipts",
+        "Backend queues OCR jobs in thread pool",
+        "Frontend polls receipt status",
+        "On completion, optional email notification sent"
+      ]
+    }
+  ],
+  "deployment_nodes": [
+    {
+      "id": "render",
+      "name": "Render",
+      "type": "PaaS",
+      "description": "Backend deployment with auto-detection via RENDER env var, binds to 0.0.0.0:PORT",
+      "services": ["api"]
+    },
+    {
+      "id": "cdn",
+      "name": "Netlify / Vercel",
+      "type": "Static Hosting + CDN",
+      "description": "Frontend SPA deployment with global CDN distribution (supuesto)",
+      "services": ["spa"]
+    },
+    {
+      "id": "local",
+      "name": "Local Development",
+      "type": "Developer Machine",
+      "description": "Vite dev server (8080) + Uvicorn with hot reload (8000)",
+      "services": ["spa", "api"]
+    }
+  ],
+  "tech_stack": {
+    "frontend": {
+      "framework": "React 18",
+      "language": "TypeScript 5.8",
+      "build": "Vite 5 (SWC)",
+      "styling": ["Tailwind CSS 3", "shadcn/ui", "Radix UI"],
+      "state": ["Zustand 5", "TanStack Query v5"],
+      "routing": "React Router v6",
+      "forms": ["React Hook Form", "Zod"],
+      "animations": "Framer Motion",
+      "storage": "IndexedDB",
+      "http": ["Axios", "native fetch (NDJSON)"],
+      "icons": "Lucide React",
+      "charts": "Recharts"
+    },
+    "backend": {
+      "framework": "FastAPI 0.115",
+      "runtime": "Python 3.12",
+      "server": "Uvicorn",
+      "validation": ["Pydantic v2", "pydantic-settings"],
+      "ocr": ["EasyOCR 1.7", "Google Cloud Vision API"],
+      "ai": "OpenAI API (gpt-5-mini / gpt-5-nano)",
+      "image": "Pillow 11",
+      "storage": "File-based JSON database",
+      "concurrency": "Thread-based OCR queue"
+    },
+    "infrastructure": {
+      "backend_hosting": "Render (supuesto)",
+      "frontend_hosting": "Netlify / Vercel (supuesto)",
+      "version_control": "Git"
+    }
+  }
+}

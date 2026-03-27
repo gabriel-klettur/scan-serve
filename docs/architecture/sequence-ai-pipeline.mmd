@@ -1,0 +1,101 @@
+%% Sequence Diagram - AI Receipt Parsing Pipeline (Streaming)
+%% The most differentiating flow: 3-agent LLM orchestration with real-time NDJSON streaming
+
+sequenceDiagram
+    autonumber
+    
+    participant U as 👤 User
+    participant SPA as 📱 SPA<br/>(React + Zustand)
+    participant API as ⚡ FastAPI<br/>(/ocr/ai/parse/stream)
+    participant Trace as 📊 AI Trace<br/>Service
+    participant Pipe as 🤖 AI Pipeline<br/>(ReceiptAiPipeline)
+    participant LLM as 🔗 OpenAI<br/>API
+    
+    U->>SPA: Click "Enhance with AI"
+    activate SPA
+    
+    SPA->>API: POST /ocr/ai/parse/stream<br/>{text_raw, fields, boxes, receiptId}
+    activate API
+    
+    API->>Trace: start_run(receipt_id, agents)
+    Trace-->>API: run_id
+    
+    API-->>SPA: NDJSON: {type: "pipeline_start", agents, run_id}
+    Note over SPA: Update ocrStore<br/>aiStatus: "processing"
+    
+    rect rgb(255, 243, 224)
+        Note over Pipe,LLM: Stage 1: Organizer (Icelandic context)
+        API->>Pipe: parse_stream(payload)
+        activate Pipe
+        
+        Pipe-->>API: {type: "stage_start", stage: "organizer"}
+        API-->>SPA: NDJSON stream event
+        Note over SPA: Show "Organizer" active
+        
+        Pipe->>LLM: Chat completion<br/>(organizer_messages)
+        LLM-->>Pipe: JSON response
+        
+        Pipe->>Pipe: extract_json_object()<br/>+ validation
+        
+        Pipe-->>API: {type: "stage_result", stage: "organizer", data}
+        API->>Trace: add_revision(stage, result)
+        Trace-->>API: revision_id, markdown_path
+        API-->>SPA: NDJSON: {stage_result + revision_id}
+        Note over SPA: mergeAiStageResult("organizer")
+        
+        Pipe-->>API: {type: "stage_end", stage: "organizer"}
+        API-->>SPA: NDJSON stream event
+    end
+    
+    Pipe-->>API: {type: "handoff", from: "organizer", to: "auditor"}
+    API-->>SPA: NDJSON stream event
+    Note over SPA: Animate handoff transition
+    
+    rect rgb(232, 245, 233)
+        Note over Pipe,LLM: Stage 2: Auditor (field validation)
+        Pipe-->>API: {type: "stage_start", stage: "auditor"}
+        API-->>SPA: NDJSON stream event
+        
+        Pipe->>LLM: Chat completion<br/>(auditor_messages + prev_json)
+        LLM-->>Pipe: JSON response
+        
+        Pipe-->>API: {type: "stage_result", stage: "auditor", data}
+        API->>Trace: add_revision(stage, result)
+        API-->>SPA: NDJSON: {stage_result + revision_id}
+        Note over SPA: mergeAiStageResult("auditor")
+        
+        Pipe-->>API: {type: "stage_end", stage: "auditor"}
+        API-->>SPA: NDJSON stream event
+    end
+    
+    Pipe-->>API: {type: "handoff", from: "auditor", to: "stylist"}
+    API-->>SPA: NDJSON stream event
+    
+    rect rgb(227, 242, 253)
+        Note over Pipe,LLM: Stage 3: Stylist (Markdown generation)
+        Pipe-->>API: {type: "stage_start", stage: "stylist"}
+        API-->>SPA: NDJSON stream event
+        
+        Pipe->>LLM: Chat completion<br/>(stylist_messages + prev_json)
+        LLM-->>Pipe: JSON response
+        
+        Pipe-->>API: {type: "stage_result", stage: "stylist", data}
+        API->>Trace: add_revision(stage, result)
+        API-->>SPA: NDJSON: {stage_result + revision_id}
+        Note over SPA: mergeAiStageResult("stylist")
+        
+        Pipe-->>API: {type: "stage_end", stage: "stylist"}
+        API-->>SPA: NDJSON stream event
+    end
+    
+    Pipe-->>API: {type: "result", data: final_response}
+    deactivate Pipe
+    
+    API->>Trace: finish_run(status: "done", elapsed_ms)
+    
+    API-->>SPA: NDJSON: {type: "pipeline_done", elapsed_ms, run_id}
+    deactivate API
+    
+    Note over SPA: setAiResult(finalResult)<br/>aiStatus: "success"
+    SPA-->>U: Display enhanced receipt<br/>with Markdown preview
+    deactivate SPA
